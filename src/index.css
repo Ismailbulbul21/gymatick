@@ -1,0 +1,175 @@
+@import "tailwindcss";
+@import "@fontsource-variable/plus-jakarta-sans";
+
+/*
+ * GYMATICK design tokens — see GYMATICK_IMPLEMENTATION_PROMPT.md §11.
+ * brand (blue) = action · income (green) = money in · expense (red) = money out
+ * pending (amber) = needs attention. Chart series colours are validated for
+ * colour-blind separation and 3:1 contrast.
+ */
+@theme {
+  --font-sans: "Plus Jakarta Sans Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  --color-brand-50: #eef3ff;
+  --color-brand-100: #dce6ff;
+  --color-brand-200: #bccdff;
+  --color-brand-300: #8eabff;
+  --color-brand-400: #5f84fb;
+  --color-brand-500: #3d63f2;
+  --color-brand-600: #2449dc;
+  --color-brand-700: #1c39b3;
+  --color-brand-800: #1b318c;
+  --color-brand-900: #1a2c6c;
+  --color-brand-950: #0f1a45;
+
+  --color-income-50: #ecfbf2;
+  --color-income-100: #d2f5e0;
+  --color-income-200: #a6ebc3;
+  --color-income-500: #1fa35a;
+  --color-income-600: #10864a;
+  --color-income-700: #0b6e36;
+
+  --color-expense-50: #fff1f1;
+  --color-expense-100: #ffe0e1;
+  --color-expense-200: #ffc2c4;
+  --color-expense-400: #ee6368;
+  --color-expense-500: #e5484f;
+  --color-expense-600: #d42b35;
+  --color-expense-700: #b3212b;
+
+  --color-pending-50: #fff8eb;
+  --color-pending-100: #feecc7;
+  --color-pending-500: #f2a516;
+  --color-pending-600: #c27c05;
+  --color-pending-700: #9a5b06;
+
+  --color-ink-50: #f7f8fb;
+  --color-ink-100: #eef1f6;
+  --color-ink-200: #e2e6ee;
+  --color-ink-300: #cbd2de;
+  --color-ink-400: #98a2b3;
+  --color-ink-500: #667085;
+  --color-ink-600: #475467;
+  --color-ink-700: #344054;
+  --color-ink-800: #1d2939;
+  --color-ink-900: #101828;
+  --color-ink-950: #0a1120;
+
+  --color-canvas: #f4f6fa;
+  --color-surface: #ffffff;
+  --color-surface-2: #f7f8fb;
+  --color-line: #e2e6ee;
+  --color-line-strong: #cbd2de;
+  --color-sidebar: #0b1533;
+  --color-sidebar-2: #14204a;
+
+  --color-chart-income: #0b6e36;
+  --color-chart-expense: #ee6368;
+  --color-chart-net: #2449dc;
+  --color-chart-grid: #e2e6ee;
+
+  --color-method-1: #2a78d6;
+  --color-method-2: #eb6834;
+  --color-method-3: #1baf7a;
+  --color-method-4: #eda100;
+  --color-method-5: #e87ba4;
+}
+
+/* Dark theme: separate steps chosen for a dark surface, not an inversion. */
+@layer base {
+  :root[data-theme='dark'] {
+    --color-canvas: #0a1120;
+    --color-surface: #111a2e;
+    --color-surface-2: #16213a;
+    --color-line: #22304d;
+    --color-line-strong: #2e3d5f;
+    --color-sidebar: #060c1c;
+    --color-sidebar-2: #101a36;
+
+    --color-ink-50: #0f1726;
+    --color-ink-100: #16203a;
+    --color-ink-200: #22304d;
+    --color-ink-300: #2e3d5f;
+    --color-ink-400: #5d6a84;
+    --color-ink-500: #8a95ab;
+    --color-ink-600: #b3bdd0;
+    --color-ink-700: #ccd4e2;
+    --color-ink-800: #dde3ee;
+    --color-ink-900: #e8ecf4;
+    --color-ink-950: #f4f7fc;
+
+    --color-brand-50: #17224a;
+    --color-brand-100: #22336b;
+    --color-brand-600: #3d63f2;
+    --color-brand-700: #5f84fb;
+
+    --color-income-50: #0f2b20;
+    --color-income-100: #14402c;
+    --color-income-600: #35c47e;
+    --color-income-700: #3fcf86;
+
+    --color-expense-50: #361a22;
+    --color-expense-100: #4a1f2a;
+    --color-expense-600: #ff8a8f;
+    --color-expense-700: #ff9ea2;
+
+    --color-pending-50: #352812;
+    --color-pending-100: #4a3714;
+    --color-pending-600: #f5b83d;
+    --color-pending-700: #f7c45e;
+
+    --color-chart-income: #23a863;
+    --color-chart-expense: #b93a42;
+    --color-chart-net: #5f84fb;
+    --color-chart-grid: #22304d;
+
+    --color-method-1: #3987e5;
+    --color-method-2: #d95926;
+    --color-method-3: #199e70;
+    --color-method-4: #c98500;
+    --color-method-5: #d55181;
+
+    color-scheme: dark;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-ink-900 antialiased;
+  }
+
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-600;
+  }
+
+  /* Columns of money line up; large standalone figures keep proportional digits. */
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}
+
+/* Thin bar shown while a screen is opening */
+@keyframes route-progress {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
+}

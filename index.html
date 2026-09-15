@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b1533" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="GYMATICK gym financial management and administration system." />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>GYMATICK · Financial Management</title>
+    <script>
+      // Apply the saved theme before the first paint, so a dark screen never flashes white.
+      ;(function () {
+        var dark = false
+        try {
+          var choice = localStorage.getItem('gymatick.theme')
+          dark = choice === 'dark' || (choice !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        } catch (error) {}
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      })()
+    </script>
+    <style>
+      html { background: #f4f6fa; }
+      html[data-theme='dark'] { background: #0a1120; }
+      .boot { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; }
+      .boot-inner { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+      .boot-text { display: flex; align-items: center; gap: 8px; color: #6b7891; font: 400 14px/20px 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+      .boot-spinner { width: 16px; height: 16px; animation: boot-spin 1s linear infinite; }
+      @keyframes boot-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .boot-spinner { animation: none; } }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="boot" role="status">
+        <div class="boot-inner">
+          <svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true">
+            <rect width="64" height="64" rx="16" fill="#0B1533" />
+            <path d="M42.6 21.4A15 15 0 1 0 47 32" fill="none" stroke="#5F84FB" stroke-width="7" stroke-linecap="round" />
+            <path d="M34 32H47" fill="none" stroke="#F03B45" stroke-width="7" stroke-linecap="round" />
+          </svg>
+          <div class="boot-text">
+            <svg class="boot-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+            Loading GYMATICK…
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

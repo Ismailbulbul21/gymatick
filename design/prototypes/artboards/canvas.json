@@ -1,0 +1,138 @@
+{
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "Dashboard & money"
+    },
+    {
+      "id": "page-2",
+      "name": "Xisaab Xir"
+    },
+    {
+      "id": "page-3",
+      "name": "People & billing"
+    },
+    {
+      "id": "page-4",
+      "name": "Reports & admin"
+    },
+    {
+      "id": "page-5",
+      "name": "Mobile"
+    }
+  ],
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "title": "Dashboard",
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1850,
+      "page": "page-1"
+    },
+    {
+      "file": "DashboardDark.dc.html",
+      "title": "Dashboard — dark theme (alternate)",
+      "x": 1560,
+      "y": 0,
+      "w": 1440,
+      "h": 1850,
+      "page": "page-1"
+    },
+    {
+      "file": "DashboardNewGym.dc.html",
+      "title": "Dashboard — new gym (empty state)",
+      "x": 3120,
+      "y": 0,
+      "w": 1440,
+      "h": 1051,
+      "page": "page-1"
+    },
+    {
+      "file": "Income.dc.html",
+      "title": "Income — Lacagta Soo Gasha",
+      "x": 0,
+      "y": 2010,
+      "w": 1440,
+      "h": 1173,
+      "page": "page-1"
+    },
+    {
+      "file": "AddIncome.dc.html",
+      "title": "Add income (drawer)",
+      "x": 1560,
+      "y": 2010,
+      "w": 1440,
+      "h": 900,
+      "page": "page-1"
+    },
+    {
+      "file": "ExpensesVoid.dc.html",
+      "title": "Expenses — void confirmation",
+      "x": 3120,
+      "y": 2010,
+      "w": 1440,
+      "h": 900,
+      "page": "page-1"
+    },
+    {
+      "file": "Transactions.dc.html",
+      "title": "Transactions ledger",
+      "x": 0,
+      "y": 3343,
+      "w": 1440,
+      "h": 1165,
+      "page": "page-1"
+    },
+    {
+      "file": "XisaabXir.dc.html",
+      "title": "Xisaab Xir — count and close the day",
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 902,
+      "page": "page-2"
+    },
+    {
+      "file": "CloseConfirm.dc.html",
+      "title": "Xisaab Xir — confirm closing",
+      "x": 1560,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "page": "page-2"
+    },
+    {
+      "file": "DayClosed.dc.html",
+      "title": "Xisaab Xir — day closed",
+      "x": 3120,
+      "y": 0,
+      "w": 1440,
+      "h": 902,
+      "page": "page-2"
+    },
+    {
+      "file": "ClosingHistory.dc.html",
+      "title": "Closing history",
+      "x": 0,
+      "y": 1062,
+      "w": 1440,
+      "h": 902,
+      "page": "page-2"
+    },
+    {
+      "file": "ClosingDetail.dc.html",
+      "title": "Closing detail — corrected after closing",
+      "x": 1560,
+      "y": 1062,
+      "w": 1440,
+      "h": 902,
+      "page": "page-2"
+    }
+  ],
+  "launch": {
+    "view": "canvas",
+    "page": "page-1"
+  }
+}
