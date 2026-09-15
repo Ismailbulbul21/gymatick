@@ -15,6 +15,7 @@ import { formatBusinessDate, monthStart } from '@/lib/dates'
 import { formatMoney, money } from '@/lib/money'
 import { queryClient } from '@/lib/query-client'
 import type { EmployeeRow } from '@/types/db'
+import { tr } from '@/i18n'
 
 export default function EmployeesPage() {
   const business = useBusiness()
@@ -35,7 +36,7 @@ export default function EmployeesPage() {
   const columns: Column<EmployeeRow>[] = [
     {
       key: 'name',
-      header: 'Employee',
+      header: tr("Employee"),
       priority: 1,
       mobile: 'title',
       cell: (row) => (
@@ -48,11 +49,11 @@ export default function EmployeesPage() {
         </div>
       ),
     },
-    { key: 'position', header: 'Position', priority: 1, mobile: 'meta', cell: (row) => row.position },
+    { key: 'position', header: tr("Position"), priority: 1, mobile: 'meta', cell: (row) => row.position },
     ...(canSeeSalary
       ? [{
           key: 'salary',
-          header: 'Monthly salary',
+          header: tr("Monthly salary"),
           align: 'right' as const,
           priority: 1 as const,
           mobile: 'value' as const,
@@ -61,16 +62,16 @@ export default function EmployeesPage() {
           ),
         }]
       : []),
-    { key: 'start', header: 'Started', priority: 3, mobile: 'hide', cell: (row) => formatBusinessDate(row.start_date) },
+    { key: 'start', header: tr("Started"), priority: 3, mobile: 'hide', cell: (row) => formatBusinessDate(row.start_date) },
     {
       key: 'status',
-      header: 'Status',
+      header: tr("Status"),
       priority: 2,
       mobile: 'meta',
       cell: (row) => (
         <div className="flex flex-col gap-1">
           <StatusBadge status={row.status} />
-          {row.end_date ? <span className="text-xs text-ink-500">Ended {formatBusinessDate(row.end_date)}</span> : null}
+          {row.end_date ? <span className="text-xs text-ink-500">{tr("Ended")}{' '}{formatBusinessDate(row.end_date)}</span> : null}
         </div>
       ),
     },
@@ -79,32 +80,32 @@ export default function EmployeesPage() {
   return (
     <>
       <PageHeader
-        title="Employees"
-        subtitle="Shaqaalaha · Trainers and staff who work at the gym"
+        title={tr("Employees")}
+        subtitle={tr("Shaqaalaha · Trainers and staff who work at the gym")}
         actions={
           can('employees.manage') && canSeeSalary ? (
-            <Button variant="primary" icon={<UserPlus className="size-4" />} onClick={() => setAddOpen(true)}>Add employee</Button>
+            <Button variant="primary" icon={<UserPlus className="size-4" />} onClick={() => setAddOpen(true)}>{tr("Add employee")}</Button>
           ) : null
         }
       />
 
       <FilterBar>
-        <SearchInput value={search} onChange={setSearch} placeholder="Search name or position…" />
+        <SearchInput value={search} onChange={setSearch} placeholder={tr("Search name or position…")} />
         <FilterSelect
-          label="Status"
+          label={tr("Status")}
           value={status}
           onChange={(value) => setStatus(value as typeof status)}
           options={[
-            { value: 'active', label: 'Active' },
-            { value: 'inactive', label: 'Inactive' },
-            { value: 'all', label: 'All' },
+            { value: 'active', label: tr("Active") },
+            { value: 'inactive', label: tr("Inactive") },
+            { value: 'all', label: tr("All") },
           ]}
         />
       </FilterBar>
 
       <Card className="overflow-hidden">
         {list.isError ? (
-          <ErrorState message="Could not load employees" onRetry={() => void list.refetch()} />
+          <ErrorState message={tr("Could not load employees")} onRetry={() => void list.refetch()} />
         ) : (
           <DataTable
             columns={columns}
@@ -113,15 +114,15 @@ export default function EmployeesPage() {
             loading={list.isLoading && !list.data}
             onRowClick={(row) => navigate(`/employees/${row.id}`)}
             rowClassName={(row) => (row.status === 'inactive' ? 'opacity-60' : undefined)}
-            caption="Employees"
+            caption={tr("Employees")}
             empty={
               <EmptyState
                 icon={<Users className="size-6" />}
-                title="No employees yet"
-                description="Add your trainers and staff to track their monthly salaries."
+                title={tr("No employees yet")}
+                description={tr("Add your trainers and staff to track their monthly salaries.")}
                 actions={
                   can('employees.manage') && canSeeSalary ? (
-                    <Button variant="primary" icon={<UserPlus className="size-4" />} onClick={() => setAddOpen(true)}>Add employee</Button>
+                    <Button variant="primary" icon={<UserPlus className="size-4" />} onClick={() => setAddOpen(true)}>{tr("Add employee")}</Button>
                   ) : undefined
                 }
               />
@@ -131,7 +132,7 @@ export default function EmployeesPage() {
       </Card>
 
       <Callout tone="info">
-        Employees with salary history are never deleted. Deactivate them instead — their payments stay in the records.
+        {tr("Employees with salary history are never deleted. Deactivate them instead — their payments stay in the records.")}
       </Callout>
 
       <AddEmployeeDrawer open={addOpen} onOpenChange={setAddOpen} />
@@ -164,7 +165,7 @@ function AddEmployeeDrawer({ open, onOpenChange }: { open: boolean; onOpenChange
     onSuccess: (employee) => {
       void queryClient.invalidateQueries({ queryKey: ['employees'] })
       void queryClient.invalidateQueries({ queryKey: ['salary-overview'] })
-      toast.success(`${employee.full_name} added`, { description: 'Their monthly salary is now tracked.' })
+      toast.success(tr("{0} added", { 0: employee.full_name }), { description: tr("Their monthly salary is now tracked.") })
       setFullName('')
       setPosition(positions[0] ?? '')
       setPhone('')
@@ -179,44 +180,44 @@ function AddEmployeeDrawer({ open, onOpenChange }: { open: boolean; onOpenChange
     <Drawer
       open={open}
       onOpenChange={onOpenChange}
-      title="Add employee"
-      description="Shaqaale cusub · someone who works at the gym"
+      title={tr("Add employee")}
+      description={tr("Shaqaale cusub · someone who works at the gym")}
       footer={
         <div className="flex justify-end gap-2">
-          <Button onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={() => onOpenChange(false)}>{tr("Cancel")}</Button>
           <Button
             variant="primary"
             loading={mutation.isPending}
             onClick={() => {
               if (!fullName.trim() || !position.trim() || moneyError(salary, currency, { allowZero: true })) {
-                toast.info('Check the details', 'Name, position and monthly salary are required.')
+                toast.info(tr("Check the details"), tr("Name, position and monthly salary are required."))
                 return
               }
               mutation.mutate()
             }}
           >
-            Add employee
+            {tr("Add employee")}
           </Button>
         </div>
       }
     >
       <div className="flex flex-col gap-4">
-        <Field label="Full name"><Input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></Field>
-        <Field label="Position" hint="Edit this list in Settings → Financial preferences">
+        <Field label={tr("Full name")}><Input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></Field>
+        <Field label={tr("Position")} hint={tr("Edit this list in Settings → Financial preferences")}>
           <Select value={position} onChange={(event) => setPosition(event.target.value)}>
             {positions.map((name) => (
               <option key={name} value={name}>{name}</option>
             ))}
           </Select>
         </Field>
-        <Field label="Phone" optional><Input value={phone} onChange={(event) => setPhone(event.target.value)} inputMode="tel" /></Field>
-        <Field label="Monthly salary" error={salary ? moneyError(salary, currency, { allowZero: true }) : undefined}>
+        <Field label={tr("Phone")} optional><Input value={phone} onChange={(event) => setPhone(event.target.value)} inputMode="tel" /></Field>
+        <Field label={tr("Monthly salary")} error={salary ? moneyError(salary, currency, { allowZero: true }) : undefined}>
           <MoneyInput currency={currency} value={salary} onChange={setSalary} />
         </Field>
-        <Field label="Start date" hint="Salary tracking starts from this month">
+        <Field label={tr("Start date")} hint={tr("Salary tracking starts from this month")}>
           <Input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
         </Field>
-        <Field label="Notes" optional><Textarea value={notes} onChange={(event) => setNotes(event.target.value)} /></Field>
+        <Field label={tr("Notes")} optional><Textarea value={notes} onChange={(event) => setNotes(event.target.value)} /></Field>
       </div>
     </Drawer>
   )

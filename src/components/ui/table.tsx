@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button, Skeleton } from './primitives'
+import { tr } from '@/i18n'
 
 export interface Column<T> {
   key: string
@@ -139,27 +140,27 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
       <p className="text-sm text-ink-500">
-        Showing <span className="num font-semibold text-ink-900">{from}–{to}</span> of{' '}
+        {tr("Showing")}{' '}<span className="num font-semibold text-ink-900">{from}–{to}</span>{' '}{tr("of")}{' '}
         <span className="num font-semibold text-ink-900">{total}</span> {label}
       </p>
       <div className="flex items-center gap-2">
         {onPageSizeChange ? (
           <select
-            aria-label="Rows per page"
+            aria-label={tr("Rows per page")}
             className="h-8 rounded-lg border border-line-strong bg-surface px-2 text-xs font-semibold text-ink-700"
             value={pageSize}
             onChange={(event) => onPageSizeChange(Number(event.target.value))}
           >
             {[25, 50, 100].map((size) => (
-              <option key={size} value={size}>{size} / page</option>
+              <option key={size} value={size}>{size}{' '}{tr("/ page")}</option>
             ))}
           </select>
         ) : null}
-        <Button size="icon" aria-label="Previous page" disabled={page === 0} onClick={() => onPageChange(page - 1)}>
+        <Button size="icon" aria-label={tr("Previous page")} disabled={page === 0} onClick={() => onPageChange(page - 1)}>
           <ChevronLeft className="size-4" />
         </Button>
         <span className="num text-sm font-semibold text-ink-700">{page + 1} / {lastPage + 1}</span>
-        <Button size="icon" aria-label="Next page" disabled={page >= lastPage} onClick={() => onPageChange(page + 1)}>
+        <Button size="icon" aria-label={tr("Next page")} disabled={page >= lastPage} onClick={() => onPageChange(page + 1)}>
           <ChevronRight className="size-4" />
         </Button>
       </div>

@@ -13,6 +13,7 @@ import { InvoiceDocument } from './InvoiceDocument'
 import { formatBusinessDate } from '@/lib/dates'
 import { formatMoney, money } from '@/lib/money'
 import { newIdempotencyKey } from '@/lib/utils'
+import { tr } from '@/i18n'
 
 export default function InvoiceDetailPage() {
   const { invoiceId } = useParams<{ invoiceId: string }>()
@@ -64,8 +65,8 @@ export default function InvoiceDetailPage() {
       setKey(newIdempotencyKey())
       setAmount('')
       setPayOpen(false)
-      toast.success('Payment recorded', {
-        description: `Balance due ${formatMoney(money(result.balance_due, currency.decimals), currency)}`,
+      toast.success(tr("Payment recorded"), {
+        description: tr("Balance due {0}", { 0: formatMoney(money(result.balance_due, currency.decimals), currency) }),
       })
     },
     onError: (error) => toast.error(error),
@@ -76,7 +77,7 @@ export default function InvoiceDetailPage() {
     onSuccess: () => {
       invalidateMoney(business.business_id)
       setLinkOpen(false)
-      toast.success('Payment attached', { description: 'No new income was created — the existing payment is now on this invoice.' })
+      toast.success(tr("Payment attached"), { description: tr("No new income was created — the existing payment is now on this invoice.") })
     },
     onError: (error) => toast.error(error),
   })
@@ -86,13 +87,13 @@ export default function InvoiceDetailPage() {
     onSuccess: () => {
       invalidateMoney(business.business_id)
       setCancelOpen(false)
-      toast.success('Invoice cancelled')
+      toast.success(tr("Invoice cancelled"))
     },
     onError: (error) => toast.error(error),
   })
 
   if (query.isLoading) return <Skeleton className="h-[520px]" />
-  if (query.isError || !query.data?.invoice) return <ErrorState message="Could not load this invoice" onRetry={() => void query.refetch()} />
+  if (query.isError || !query.data?.invoice) return <ErrorState message={tr("Could not load this invoice")} onRetry={() => void query.refetch()} />
 
   const { invoice, items, payments } = query.data
   const balance = money(invoice.balance_due, currency.decimals)
@@ -105,29 +106,29 @@ export default function InvoiceDetailPage() {
           <span className="flex flex-wrap items-center gap-2">
             <StatusBadge status={invoice.status} />
             <span>
-              {invoice.customer_display_name ?? 'Walk-in customer'} · issued {formatBusinessDate(invoice.issue_date)}
+              {invoice.customer_display_name ?? tr("Walk-in customer")}{' '}{tr("· issued")}{' '}{formatBusinessDate(invoice.issue_date)}
             </span>
           </span>
         }
         actions={
           <>
-            <Link to="/invoices"><Button icon={<ArrowLeft className="size-4" />}>Invoices</Button></Link>
+            <Link to="/invoices"><Button icon={<ArrowLeft className="size-4" />}>{tr("Invoices")}</Button></Link>
             <Link to={`/invoices/${invoice.id}/print`} target="_blank">
-              <Button icon={<Printer className="size-4" />}>Print / PDF</Button>
+              <Button icon={<Printer className="size-4" />}>{tr("Print / PDF")}</Button>
             </Link>
             <Link to={`/invoices/${invoice.id}/print?format=receipt`} target="_blank">
-              <Button icon={<ReceiptText className="size-4" />}>Receipt</Button>
+              <Button icon={<ReceiptText className="size-4" />}>{tr("Receipt")}</Button>
             </Link>
             {can('invoices.record_payment') && balance > 0 && invoice.status !== 'cancelled' ? (
               <Button variant="primary" onClick={() => { setPayOpen(true); setAmount(String(balance / 10 ** currency.decimals)) }}>
-                Record payment
+                {tr("Record payment")}
               </Button>
             ) : null}
             {can('invoices.record_payment') && balance > 0 && invoice.status !== 'cancelled' ? (
-              <Button icon={<Link2 className="size-4" />} onClick={() => setLinkOpen(true)}>Link existing income</Button>
+              <Button icon={<Link2 className="size-4" />} onClick={() => setLinkOpen(true)}>{tr("Link existing income")}</Button>
             ) : null}
             {can('invoices.cancel') && invoice.status !== 'cancelled' ? (
-              <Button variant="ghost" icon={<Ban className="size-4" />} onClick={() => setCancelOpen(true)}>Cancel invoice</Button>
+              <Button variant="ghost" icon={<Ban className="size-4" />} onClick={() => setCancelOpen(true)}>{tr("Cancel invoice")}</Button>
             ) : null}
           </>
         }
@@ -147,10 +148,10 @@ export default function InvoiceDetailPage() {
 
         <div className="flex flex-col gap-4">
           <Card>
-            <CardHeader title="Payments" description={`${payments.filter((p) => p.status === 'posted').length} recorded`} />
+            <CardHeader title={tr("Payments")} description={tr("{0} recorded", { 0: payments.filter((p) => p.status === 'posted').length })} />
             <div className="flex flex-col gap-3 p-5 pt-4">
               {payments.length === 0 ? (
-                <p className="text-sm text-ink-500">Nothing paid yet.</p>
+                <p className="text-sm text-ink-500">{tr("Nothing paid yet.")}</p>
               ) : (
                 payments.map((payment) => (
                   <div key={payment.id} className={`flex items-start justify-between gap-3 text-sm ${payment.status === 'voided' ? 'opacity-60' : ''}`}>
@@ -158,7 +159,7 @@ export default function InvoiceDetailPage() {
                       <p className="num font-semibold text-ink-900">{payment.reference_label}</p>
                       <p className="text-xs text-ink-500">
                         {formatBusinessDate(payment.business_date)} · {payment.payment_method_name}
-                        {payment.status === 'voided' ? ' · voided' : ''}
+                        {payment.status === 'voided' ? tr(" · voided") : ''}
                       </p>
                     </div>
                     <span className={`num font-semibold ${payment.status === 'voided' ? 'text-ink-400 line-through' : 'text-income-700'}`}>
@@ -169,7 +170,7 @@ export default function InvoiceDetailPage() {
               )}
               <div className="h-px bg-line" />
               <div className="flex items-center justify-between text-sm font-semibold">
-                <span>Balance due</span>
+                <span>{tr("Balance due")}</span>
                 <span className="num">{formatMoney(balance, currency)}</span>
               </div>
             </div>
@@ -177,7 +178,7 @@ export default function InvoiceDetailPage() {
 
           {invoice.status === 'cancelled' ? (
             <Callout tone="warning">
-              This invoice was cancelled{invoice.cancel_reason ? `: “${invoice.cancel_reason}”` : ''}. It does not count as income.
+              {tr("This invoice was cancelled")}{invoice.cancel_reason ? `: “${invoice.cancel_reason}”` : ''}{tr(". It does not count as income.")}
             </Callout>
           ) : null}
         </div>
@@ -186,65 +187,65 @@ export default function InvoiceDetailPage() {
       <Modal
         open={payOpen}
         onOpenChange={setPayOpen}
-        title="Record a payment"
-        description={`Balance due ${formatMoney(balance, currency)}`}
+        title={tr("Record a payment")}
+        description={tr("Balance due {0}", { 0: formatMoney(balance, currency) })}
         footer={
           <>
-            <Button onClick={() => setPayOpen(false)}>Cancel</Button>
+            <Button onClick={() => setPayOpen(false)}>{tr("Cancel")}</Button>
             <Button
               variant="primary"
               loading={payMutation.isPending}
               onClick={() => {
-                if (moneyError(amount, currency) || !methodId) return toast.info('Enter the amount and payment method')
+                if (moneyError(amount, currency) || !methodId) return toast.info(tr("Enter the amount and payment method"))
                 payMutation.mutate()
               }}
             >
-              Record payment
+              {tr("Record payment")}
             </Button>
           </>
         }
       >
         <div className="flex flex-col gap-4">
-          <Field label="Amount" error={amount ? moneyError(amount, currency) : undefined}>
+          <Field label={tr("Amount")} error={amount ? moneyError(amount, currency) : undefined}>
             <MoneyInput currency={currency} value={amount} onChange={setAmount} />
           </Field>
-          <Field label="Payment method">
+          <Field label={tr("Payment method")}>
             <Select value={methodId} onChange={(event) => setMethodId(event.target.value)}>
-              <option value="">Choose…</option>
+              <option value="">{tr("Choose…")}</option>
               {(methods.data ?? []).filter((method) => method.status === 'active').map((method) => (
                 <option key={method.id} value={method.id}>{method.name}</option>
               ))}
             </Select>
           </Field>
-          <Callout tone="info">This records income for the gym and updates the invoice status automatically.</Callout>
+          <Callout tone="info">{tr("This records income for the gym and updates the invoice status automatically.")}</Callout>
         </div>
       </Modal>
 
       <Modal
         open={linkOpen}
         onOpenChange={setLinkOpen}
-        title="Attach a payment already recorded"
-        description="Use this when the money was recorded as income before the invoice was created."
+        title={tr("Attach a payment already recorded")}
+        description={tr("Use this when the money was recorded as income before the invoice was created.")}
         footer={
           <>
-            <Button onClick={() => setLinkOpen(false)}>Cancel</Button>
+            <Button onClick={() => setLinkOpen(false)}>{tr("Cancel")}</Button>
             <Button
               variant="primary"
               loading={linkMutation.isPending}
               onClick={() => {
-                if (!selectedIncome) return toast.info('Choose the payment to attach')
+                if (!selectedIncome) return toast.info(tr("Choose the payment to attach"))
                 linkMutation.mutate()
               }}
             >
-              Attach payment
+              {tr("Attach payment")}
             </Button>
           </>
         }
       >
         <div className="flex flex-col gap-4">
-          <Field label="Payment" hint="Only payments that are not already on an invoice">
+          <Field label={tr("Payment")} hint={tr("Only payments that are not already on an invoice")}>
             <Select value={selectedIncome} onChange={(event) => setSelectedIncome(event.target.value)}>
-              <option value="">Choose a recorded payment…</option>
+              <option value="">{tr("Choose a recorded payment…")}</option>
               {(unlinked.data?.rows ?? [])
                 .filter((row) => !row.invoice_id && row.status === 'posted')
                 .map((row) => (
@@ -255,7 +256,7 @@ export default function InvoiceDetailPage() {
                 ))}
             </Select>
           </Field>
-          <Callout tone="info">No new income is created — the invoice simply points to that payment.</Callout>
+          <Callout tone="info">{tr("No new income is created — the invoice simply points to that payment.")}</Callout>
         </div>
       </Modal>
 
@@ -263,33 +264,33 @@ export default function InvoiceDetailPage() {
         open={cancelOpen}
         onOpenChange={setCancelOpen}
         destructive
-        title="Cancel this invoice?"
-        description="A cancelled invoice never counts as income."
-        confirmLabel="Cancel invoice"
-        cancelLabel="Keep invoice"
+        title={tr("Cancel this invoice?")}
+        description={tr("A cancelled invoice never counts as income.")}
+        confirmLabel={tr("Cancel invoice")}
+        cancelLabel={tr("Keep invoice")}
         loading={cancelMutation.isPending}
         onConfirm={() => {
-          if (cancelReason.trim().length < 5) return toast.info('Please give a reason', 'At least 5 characters.')
+          if (cancelReason.trim().length < 5) return toast.info(tr("Please give a reason"), tr("At least 5 characters."))
           cancelMutation.mutate()
         }}
         consequences={[
           money(invoice.amount_paid, currency.decimals) > 0
-            ? 'This invoice has payments — they must be voided as part of cancelling.'
-            : 'No payments are attached, so nothing else changes.',
-          'The invoice stays in the history with your name and reason.',
+            ? tr("This invoice has payments — they must be voided as part of cancelling.")
+            : tr("No payments are attached, so nothing else changes."),
+          tr("The invoice stays in the history with your name and reason."),
         ]}
       >
         <div className="flex flex-col gap-4">
-          <Field label="Reason">
-            <Textarea value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} placeholder="e.g. Member changed their mind before paying" />
+          <Field label={tr("Reason")}>
+            <Textarea value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} placeholder={tr("e.g. Member changed their mind before paying")} />
           </Field>
           {money(invoice.amount_paid, currency.decimals) > 0 ? (
             <label className="flex items-start gap-3 rounded-xl border border-expense-100 bg-expense-50 p-3.5 text-sm">
               <input type="checkbox" className="mt-0.5 size-4 accent-expense-600" checked={voidPayments} onChange={(event) => setVoidPayments(event.target.checked)} />
               <span>
-                <span className="font-semibold text-ink-900">Void the payments too</span>
+                <span className="font-semibold text-ink-900">{tr("Void the payments too")}</span>
                 <span className="block text-xs text-ink-600">
-                  {formatMoney(money(invoice.amount_paid, currency.decimals), currency)} will stop counting as income. Only owners can do this.
+                  {formatMoney(money(invoice.amount_paid, currency.decimals), currency)}{' '}{tr("will stop counting as income. Only owners can do this.")}
                 </span>
               </span>
             </label>

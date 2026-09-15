@@ -1,7 +1,20 @@
+import { getLanguage } from '@/i18n'
 /** Dates are business dates: plain YYYY-MM-DD strings decided by the server in the
  *  gym's timezone. The browser clock is never used to decide which day money belongs to. */
 import { TZDate } from '@date-fns/tz'
 import { addDays, addMonths, endOfMonth, format, parseISO, startOfMonth, startOfWeek, subDays } from 'date-fns'
+
+const SOMALI_DATE_WORDS: Record<string, string> = {
+  January: 'Janaayo', February: 'Febraayo', March: 'Maarso', April: 'Abriil', May: 'May', June: 'Juun', July: 'Luuliyo',
+  August: 'Ogost', September: 'Sebtembar', October: 'Oktoobar', November: 'Nofembar', December: 'Desembar',
+  Jan: 'Jan', Feb: 'Feb', Mar: 'Mar', Apr: 'Abr', Jun: 'Jun', Jul: 'Luu', Aug: 'Ogo', Sep: 'Seb', Oct: 'Okt', Nov: 'Nof', Dec: 'Des',
+  Sunday: 'Axad', Monday: 'Isniin', Tuesday: 'Talaado', Wednesday: 'Arbaco', Thursday: 'Khamiis', Friday: 'Jimce', Saturday: 'Sabti',
+  Sun: 'Axd', Mon: 'Isn', Tue: 'Tal', Wed: 'Arb', Thu: 'Kha', Fri: 'Jim', Sat: 'Sab',
+}
+
+/** Month and day names in the interface language (date-fns has no Somali locale). */
+const localize = (text: string): string =>
+  getLanguage() === 'so' ? text.replace(/[A-Z][a-z]+/g, (word) => SOMALI_DATE_WORDS[word] ?? word) : text
 
 export type DatePreset = 'today' | 'yesterday' | 'this_week' | 'this_month' | 'last_month' | 'last_7' | 'last_30' | 'custom'
 
@@ -53,15 +66,15 @@ export const presetLabel: Record<Exclude<DatePreset, 'custom'>, string> = {
 
 /** 14 Sep 2026 */
 export const formatBusinessDate = (iso: string | null | undefined, pattern = 'd MMM yyyy'): string =>
-  iso ? format(parseISO(iso), pattern) : '—'
+  iso ? localize(format(parseISO(iso), pattern)) : '—'
 
 /** Monday, 14 September 2026 */
-export const formatLongDate = (iso: string): string => format(parseISO(iso), 'EEEE, d MMMM yyyy')
+export const formatLongDate = (iso: string): string => localize(format(parseISO(iso), 'EEEE, d MMMM yyyy'))
 
 /** A timestamp shown in the gym's timezone, never the viewer's. */
 export function formatBusinessTime(timestamp: string | null | undefined, timezone: string, pattern = 'HH:mm'): string {
   if (!timestamp) return '—'
-  return format(new TZDate(new Date(timestamp), timezone), pattern)
+  return localize(format(new TZDate(new Date(timestamp), timezone), pattern))
 }
 
 export const formatBusinessDateTime = (timestamp: string | null | undefined, timezone: string): string =>
@@ -69,7 +82,7 @@ export const formatBusinessDateTime = (timestamp: string | null | undefined, tim
 
 export const monthStart = (iso: string): string => toISODate(startOfMonth(parseISO(iso)))
 export const shiftMonth = (isoMonth: string, months: number): string => toISODate(addMonths(parseISO(isoMonth), months))
-export const formatMonth = (isoMonth: string): string => format(parseISO(isoMonth), 'MMMM yyyy')
+export const formatMonth = (isoMonth: string): string => localize(format(parseISO(isoMonth), 'MMMM yyyy'))
 export const nextDay = (iso: string): string => toISODate(addDays(parseISO(iso), 1))
 
 /** Days between two business dates, inclusive. */

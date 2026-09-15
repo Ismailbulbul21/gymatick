@@ -173,3 +173,8 @@
   from { transform: translateX(-100%); }
   to { transform: translateX(300%); }
 }
+
+/* No grey flash when tapping on touch screens */
+html {
+  -webkit-tap-highlight-color: transparent;
+}

@@ -1,3 +1,4 @@
+import { FEATURES } from '@/lib/features'
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { ArrowDownLeft, ArrowUpRight, Banknote, Check, Landmark, Plus, Smartphone } from 'lucide-react'
@@ -14,6 +15,7 @@ import { formatBusinessDate, nextDay } from '@/lib/dates'
 import { parseAppError } from '@/lib/errors'
 import { parseMoneyInput } from '@/lib/money'
 import type { Category, PaymentMethod } from '@/types/db'
+import { tr } from '@/i18n'
 
 const methodIcon = (method: PaymentMethod) =>
   method.type === 'cash' ? <Banknote className="size-4" /> : method.type === 'bank' ? <Landmark className="size-4" /> : <Smartphone className="size-4" />
@@ -56,7 +58,7 @@ export function RecordMoneyDrawer({ mode, open, onOpenChange, onRecorded }: {
   const customers = useQuery({
     queryKey: queryKeys.customers(business.business_id),
     queryFn: () => listCustomers(business.business_id),
-    enabled: open && isIncome,
+    enabled: FEATURES.customers && open && isIncome,
   })
   const dashboard = useQuery({
     queryKey: queryKeys.dashboard(business.business_id),
@@ -124,7 +126,7 @@ export function RecordMoneyDrawer({ mode, open, onOpenChange, onRecorded }: {
     onSuccess: (row) => {
       invalidateMoney(business.business_id)
       toast.success(
-        `${isIncome ? 'Income' : 'Expense'} of ${currency.symbol}${Number(row.amount).toFixed(currency.decimals)} recorded`,
+        tr("{0} of {1}{2} recorded", { 0: isIncome ? 'Income' : 'Expense', 1: currency.symbol, 2: Number(row.amount).toFixed(currency.decimals) }),
         { description: `${row.reference_label ?? ''} · ${formatBusinessDate(row.business_date)}`.trim() },
       )
       onRecorded?.()
@@ -170,8 +172,8 @@ export function RecordMoneyDrawer({ mode, open, onOpenChange, onRecorded }: {
           if (!next) reset(false)
           onOpenChange(next)
         }}
-        title={isIncome ? 'Add income' : 'Add expense'}
-        description={isIncome ? 'Lacagta Soo Gasha · money received' : 'Lacagta Baxda · money spent'}
+        title={isIncome ? tr("Add income") : tr("Add expense")}
+        description={isIncome ? tr("Lacagta Soo Gasha · money received") : tr("Lacagta Baxda · money spent")}
         icon={
           <span className={`grid size-9 shrink-0 place-items-center rounded-[10px] ${isIncome ? 'bg-income-50 text-income-600' : 'bg-expense-50 text-expense-600'}`}>
             {isIncome ? <ArrowDownLeft className="size-[18px]" /> : <ArrowUpRight className="size-[18px]" />}
@@ -186,19 +188,19 @@ export function RecordMoneyDrawer({ mode, open, onOpenChange, onRecorded }: {
                 checked={addAnother}
                 onChange={(event) => setAddAnother(event.target.checked)}
               />
-              Add another after saving
+              {tr("Add another after saving")}
             </label>
             <div className="flex items-center gap-2">
-              <Button onClick={() => onOpenChange(false)} disabled={mutation.isPending}>Cancel</Button>
+              <Button onClick={() => onOpenChange(false)} disabled={mutation.isPending}>{tr("Cancel")}</Button>
               <Button variant="primary" icon={<Check className="size-4" />} onClick={submit} loading={mutation.isPending}>
-                {isIncome ? 'Save income' : 'Save expense'}
+                {isIncome ? tr("Save income") : tr("Save expense")}
               </Button>
             </div>
           </div>
         }
       >
         <div className="flex flex-col gap-5">
-          <Field label="Amount" error={submitted ? fieldErrors.amount : undefined}>
+          <Field label={tr("Amount")} error={submitted ? fieldErrors.amount : undefined}>
             <MoneyInput
               currency={currency}
               value={amount}
@@ -209,7 +211,7 @@ export function RecordMoneyDrawer({ mode, open, onOpenChange, onRecorded }: {
             />
           </Field>
 
-          <Field label="Category" error={submitted ? fieldErrors.category_id : undefined}>
+          <Field label={tr("Category")} error={submitted ? fieldErrors.category_id : undefined}>
             <ChipGroup
               options={visibleCategories.map((category) => ({
                 value: category.id,
@@ -221,12 +223,12 @@ export function RecordMoneyDrawer({ mode, open, onOpenChange, onRecorded }: {
             />
             {!isIncome ? (
               <p className="mt-1 text-xs text-ink-500">
-                Salaries are paid from Salaries → Pay salary, so they are counted once.
+                {tr("Salaries are paid from Salaries → Pay salary, so they are counted once.")}
               </p>
             ) : null}
           </Field>
 
-          <Field label="Payment method" error={submitted ? fieldErrors.payment_method_id : undefined}>
+          <Field label={tr("Payment method")} error={submitted ? fieldErrors.payment_method_id : undefined}>
             <ChipGroup
               options={visibleMethods.map((method) => ({ value: method.id, label: method.name, icon: methodIcon(method) }))}
               value={methodId}
@@ -236,16 +238,17 @@ export function RecordMoneyDrawer({ mode, open, onOpenChange, onRecorded }: {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
-              label="Date"
+              label={tr("Date")}
               htmlFor="money-date"
               error={submitted ? fieldErrors.business_date : undefined}
-              hint={todayClosed ? `Today is closed — this goes to ${formatBusinessDate(defaultDate)}` : `Business day · ${business.settings.timezone}`}
+              hint={todayClosed ? tr("Today is closed — this goes to {0}", { 0: formatBusinessDate(defaultDate) }) : tr("Business day · {0}", { 0: business.settings.timezone })}
             >
               <Input id="money-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
             </Field>
 
             {isIncome ? (
-              <Field label="Customer" optional hint="Leave empty for a walk-in">
+              FEATURES.customers ? (
+              <Field label={tr("Customer")} optional hint={tr("Leave empty for a walk-in")}>
                 <Combobox
                   items={(customers.data ?? []).map((customer) => ({
                     id: customer.id,
@@ -254,58 +257,58 @@ export function RecordMoneyDrawer({ mode, open, onOpenChange, onRecorded }: {
                   }))}
                   value={customerId}
                   onChange={setCustomerId}
-                  placeholder="Search members…"
-                  createLabel="Add customer"
+                  placeholder={tr("Search members…")}
+                  createLabel={tr("Add customer")}
                   onCreate={async (name) => {
                     try {
                       const created = await saveCustomer(business.business_id, { full_name: name })
                       await customers.refetch()
                       setCustomerId(created.id)
-                      toast.success(`${created.full_name} added`)
+                      toast.success(tr("{0} added", { 0: created.full_name }))
                     } catch (error) {
                       toast.error(error)
                     }
                   }}
                 />
               </Field>
+              ) : null
             ) : (
-              <Field label="Paid to" optional hint="Shop, supplier or person">
-                <Input value={vendor} onChange={(event) => setVendor(event.target.value)} placeholder="e.g. Power supplier" />
+              <Field label={tr("Paid to")} optional hint={tr("Shop, supplier or person")}>
+                <Input value={vendor} onChange={(event) => setVendor(event.target.value)} placeholder={tr("e.g. Power supplier")} />
               </Field>
             )}
           </div>
 
-          <Field label="Description" optional>
+          <Field label={tr("Description")} optional>
             <Input
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               placeholder={
-                visibleCategories.find((c) => c.id === categoryId)?.name ?? (isIncome ? 'Monthly membership' : 'Electricity bill')
+                visibleCategories.find((c) => c.id === categoryId)?.name ?? (isIncome ? tr("Monthly membership") : tr("Electricity bill"))
               }
               maxLength={300}
             />
           </Field>
 
           {showNotes ? (
-            <Field label="Notes" optional>
+            <Field label={tr("Notes")} optional>
               <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={2000} />
             </Field>
           ) : (
             <Button variant="link" size="sm" icon={<Plus className="size-4" />} onClick={() => setShowNotes(true)} className="self-start px-0">
-              Add a note
+              {tr("Add a note")}
             </Button>
           )}
 
           {parsedAmount.ok && methodId ? (
             <Callout tone="info">
-              Recorded as{' '}
+              {tr("Recorded as")}{' '}
               <strong className="num">
                 {isIncome ? '+' : '−'}
                 {currency.symbol}
                 {amount}
               </strong>{' '}
-              in {visibleMethods.find((m) => m.id === methodId)?.name} on {formatBusinessDate(date)}. It appears on the dashboard
-              and in that day&apos;s Xisaab Xir.
+              {tr("in")}{' '}{visibleMethods.find((m) => m.id === methodId)?.name}{' '}{tr("on")}{' '}{formatBusinessDate(date)}{tr(". It appears on the dashboard and in that day's Xisaab Xir.")}
             </Callout>
           ) : null}
         </div>
@@ -314,17 +317,17 @@ export function RecordMoneyDrawer({ mode, open, onOpenChange, onRecorded }: {
       <ConfirmDialog
         open={confirmLarge}
         onOpenChange={setConfirmLarge}
-        title="Confirm this amount"
-        description={`${currency.symbol}${amount} is larger than the usual amount for this gym.`}
-        confirmLabel="Yes, record it"
+        title={tr("Confirm this amount")}
+        description={tr("{0}{1} is larger than the usual amount for this gym.", { 0: currency.symbol, 1: amount })}
+        confirmLabel={tr("Yes, record it")}
         loading={mutation.isPending}
         onConfirm={() => {
           setConfirmLarge(false)
           mutation.mutate()
         }}
         consequences={[
-          `It will be recorded as ${isIncome ? 'income' : 'an expense'} on ${formatBusinessDate(date)}.`,
-          'You can void it later with a reason if it was a mistake.',
+          tr("It will be recorded as {0} on {1}.", { 0: isIncome ? 'income' : 'an expense', 1: formatBusinessDate(date) }),
+          tr("You can void it later with a reason if it was a mistake."),
         ]}
       />
     </>

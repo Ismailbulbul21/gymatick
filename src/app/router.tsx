@@ -1,3 +1,4 @@
+import { FEATURES } from '@/lib/features'
 import { createBrowserRouter, Navigate } from 'react-router'
 import { AppShell } from './AppShell'
 import { RequireAuth, RequireBusiness, RequirePermission, Splash } from './guards'
@@ -58,11 +59,15 @@ export const router = createBrowserRouter([
                   { path: ':invoiceId', lazy: page(screens.invoiceDetail) },
                 ],
               },
-              {
-                path: '/customers',
-                element: <RequirePermission permission="customers.view" what="customers" />,
-                children: [{ index: true, loader: screenData.customers, lazy: page(screens.customers) }],
-              },
+              ...(FEATURES.customers
+                ? [
+                    {
+                      path: '/customers',
+                      element: <RequirePermission permission="customers.view" what="customers" />,
+                      children: [{ index: true, loader: screenData.customers, lazy: page(screens.customers) }],
+                    },
+                  ]
+                : []),
               {
                 path: '/employees',
                 element: <RequirePermission permission="employees.view" what="employees" />,

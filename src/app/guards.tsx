@@ -4,6 +4,7 @@ import { Lock, LoaderCircle } from 'lucide-react'
 import { useSession } from './providers/SessionProvider'
 import { Button, Card, EmptyState } from '@/components/ui/primitives'
 import { GymatickMark } from '@/components/brand/Logo'
+import { tr } from '@/i18n'
 
 export function Splash({ message }: { message?: string }) {
   return (
@@ -12,7 +13,7 @@ export function Splash({ message }: { message?: string }) {
         <GymatickMark size={44} />
         <div className="flex items-center gap-2 text-sm text-ink-500">
           <LoaderCircle className="size-4 animate-spin" aria-hidden />
-          {message ?? 'Loading GYMATICK…'}
+          {message ?? tr("Loading GYMATICK…")}
         </div>
       </div>
     </div>
@@ -44,9 +45,9 @@ export function RequireBusiness() {
         <Card className="max-w-md p-8">
           <EmptyState
             icon={<Lock className="size-6" />}
-            title="Cannot load your gym"
-            description="GYMATICK could not reach the server or your session has changed. Sign in again to continue."
-            actions={<Button variant="primary" onClick={() => void signOut()}>Sign in again</Button>}
+            title={tr("Cannot load your gym")}
+            description={tr("GYMATICK could not reach the server or your session has changed. Sign in again to continue.")}
+            actions={<Button variant="primary" onClick={() => void signOut()}>{tr("Sign in again")}</Button>}
           />
         </Card>
       </div>
@@ -59,9 +60,9 @@ export function RequireBusiness() {
         <Card className="max-w-md p-8">
           <EmptyState
             icon={<Lock className="size-6" />}
-            title="This account has no gym yet"
-            description="Your account is not linked to a gym, or it has been deactivated. Ask the gym owner to give you access."
-            actions={<Button onClick={() => void signOut()}>Sign out</Button>}
+            title={tr("This account has no gym yet")}
+            description={tr("Your account is not linked to a gym, or it has been deactivated. Ask the gym owner to give you access.")}
+            actions={<Button onClick={() => void signOut()}>{tr("Sign out")}</Button>}
           />
         </Card>
       </div>
@@ -89,11 +90,11 @@ export function Forbidden({ what = 'this page' }: { what?: string }) {
     <Card className="mx-auto max-w-xl">
       <EmptyState
         icon={<Lock className="size-6" />}
-        title={`You don't have access to ${what}`}
-        description="Your account can only use the parts of GYMATICK the owner has given you. Ask the owner if you need more access."
+        title={tr("You don't have access to {0}", { 0: tr(what) })}
+        description={tr("Your account can only use the parts of GYMATICK the owner has given you. Ask the owner if you need more access.")}
         actions={
           <Button variant="primary" onClick={() => window.history.back()}>
-            Go back
+            {tr("Go back")}
           </Button>
         }
       />

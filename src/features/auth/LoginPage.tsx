@@ -1,3 +1,4 @@
+import { LanguageSwitch } from '@/components/ui/LanguageSwitch'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { Eye, EyeOff, LockKeyhole, ShieldCheck, TrendingUp, Wallet } from 'lucide-react'
@@ -7,6 +8,7 @@ import { GymatickLogo } from '@/components/brand/Logo'
 import { Button, Callout, Card } from '@/components/ui/primitives'
 import { Field, Input } from '@/components/ui/form'
 import { safeReturnTo } from '@/lib/utils'
+import { tr } from '@/i18n'
 
 export default function LoginPage() {
   const [params] = useSearchParams()
@@ -59,10 +61,10 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col gap-8">
           <div>
             <h1 className="max-w-md text-4xl font-bold leading-tight text-white">
-              Every shilling in and out of your gym, in one place.
+              {tr("Every shilling in and out of your gym, in one place.")}
             </h1>
             <p className="mt-3 max-w-md text-white/60">
-              Income, expenses, invoices, salaries and Xisaab Xir — with a record of who did what, and when.
+              {tr("Income, expenses, invoices, salaries and Xisaab Xir — with a record of who did what, and when.")}
             </p>
           </div>
           <ul className="flex flex-col gap-4 text-white/80">
@@ -78,20 +80,23 @@ export default function LoginPage() {
             ))}
           </ul>
         </div>
-        <p className="relative z-10 text-xs text-white/40">Accounts are created by the gym owner. Access is checked on every request.</p>
+        <p className="relative z-10 text-xs text-white/40">{tr("Accounts are created by the gym owner. Access is checked on every request.")}</p>
       </div>
 
       {/* Sign-in form */}
       <div className="flex items-center justify-center bg-canvas p-6">
         <Card className="w-full max-w-[420px] p-8">
-          <div className="lg:hidden">
-            <GymatickLogo onDark={false} />
+          <div className="flex items-center justify-between gap-3">
+            <div className="lg:hidden">
+              <GymatickLogo onDark={false} />
+            </div>
+            <LanguageSwitch className="ml-auto" />
           </div>
-          <h2 className="mt-6 text-2xl font-bold text-ink-900 lg:mt-0">Welcome back</h2>
-          <p className="mt-1 text-sm text-ink-500">Sign in to manage GYMATICK&apos;s money.</p>
+          <h2 className="mt-6 text-2xl font-bold text-ink-900">{tr("Welcome back")}</h2>
+          <p className="mt-1 text-sm text-ink-500">{tr("Sign in to manage GYMATICK's money.")}</p>
 
           {reason === 'session-expired' ? (
-            <Callout tone="info" className="mt-5">Your session expired. Please sign in again.</Callout>
+            <Callout tone="info" className="mt-5">{tr("Your session expired. Please sign in again.")}</Callout>
           ) : null}
           {error ? (
             <Callout tone="danger" className="mt-5" icon={<LockKeyhole className="size-[18px] text-expense-600" />}>
@@ -100,7 +105,7 @@ export default function LoginPage() {
           ) : null}
 
           <form className="mt-6 flex flex-col gap-4" onSubmit={submit}>
-            <Field label="Email" htmlFor="email">
+            <Field label={tr("Email")} htmlFor="email">
               <Input
                 id="email"
                 type="email"
@@ -108,10 +113,10 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@example.com"
+                placeholder={tr("you@example.com")}
               />
             </Field>
-            <Field label="Password" htmlFor="password">
+            <Field label={tr("Password")} htmlFor="password">
               <div className="relative">
                 <Input
                   id="password"
@@ -124,7 +129,7 @@ export default function LoginPage() {
                 />
                 <button
                   type="button"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? tr("Hide password") : tr("Show password")}
                   aria-pressed={showPassword}
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-500 hover:text-ink-900"
@@ -135,11 +140,11 @@ export default function LoginPage() {
             </Field>
             <div className="flex justify-end">
               <Link to="/forgot-password" className="text-sm font-semibold text-brand-600 hover:underline">
-                Forgot password?
+                {tr("Forgot password?")}
               </Link>
             </div>
             <Button type="submit" variant="primary" size="lg" loading={pending} className="w-full">
-              Sign in
+              {tr("Sign in")}
             </Button>
           </form>
         </Card>

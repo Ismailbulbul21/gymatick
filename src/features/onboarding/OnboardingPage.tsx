@@ -1,3 +1,4 @@
+import { LanguageSwitch } from '@/components/ui/LanguageSwitch'
 import { useState, type ReactNode } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -16,6 +17,7 @@ import { formatBusinessDate } from '@/lib/dates'
 import { formatMoney, parseMoneyInput } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import type { PaymentMethod, PaymentMethodType } from '@/types/db'
+import { tr } from '@/i18n'
 
 const STEPS = ['Your gym', 'Where money is kept', 'Opening balances'] as const
 
@@ -38,17 +40,20 @@ export default function OnboardingPage() {
     <div className="min-h-svh bg-canvas">
       <header className="flex h-16 items-center justify-between border-b border-line bg-surface px-4 lg:px-8">
         <GymatickLogo onDark={false} />
-        <Button variant="ghost" size="sm" icon={<LogOut className="size-4" />} onClick={() => void signOut()}>
-          Sign out
-        </Button>
+        <div className="flex items-center gap-2">
+          <LanguageSwitch />
+          <Button variant="ghost" size="sm" icon={<LogOut className="size-4" />} onClick={() => void signOut()}>
+            {tr("Sign out")}
+          </Button>
+        </div>
       </header>
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8">
         {isOwner ? (
           <>
             <div>
-              <p className="text-sm font-semibold text-brand-600">Welcome to GYMATICK</p>
-              <h1 className="mt-1 text-2xl font-bold text-ink-900">Set up {business.business_name}</h1>
-              <p className="mt-1 text-sm text-ink-500">Three short steps, then you can record the first payment.</p>
+              <p className="text-sm font-semibold text-brand-600">{tr("Welcome to GYMATICK")}</p>
+              <h1 className="mt-1 text-2xl font-bold text-ink-900">{tr("Set up")}{' '}{business.business_name}</h1>
+              <p className="mt-1 text-sm text-ink-500">{tr("Three short steps, then you can record the first payment.")}</p>
             </div>
             <Stepper step={step} />
             {step === 0 ? <GymStep onNext={() => setStep(1)} /> : null}
@@ -59,9 +64,9 @@ export default function OnboardingPage() {
           <Card className="p-8">
             <EmptyState
               icon={<Building2 className="size-6" />}
-              title="The owner is still setting up this gym"
-              description="GYMATICK opens as soon as the owner enters the opening balances."
-              actions={<Button onClick={() => window.location.reload()}>Check again</Button>}
+              title={tr("The owner is still setting up this gym")}
+              description={tr("GYMATICK opens as soon as the owner enters the opening balances.")}
+              actions={<Button onClick={() => window.location.reload()}>{tr("Check again")}</Button>}
             />
           </Card>
         )}
@@ -72,7 +77,7 @@ export default function OnboardingPage() {
 
 function Stepper({ step }: { step: number }) {
   return (
-    <ol className="flex items-center gap-2" aria-label="Setup progress">
+    <ol className="flex items-center gap-2" aria-label={tr("Setup progress")}>
       {STEPS.map((label, index) => (
         <li key={label} className="flex flex-1 items-center gap-2" aria-current={index === step ? 'step' : undefined}>
           <span
@@ -83,7 +88,7 @@ function Stepper({ step }: { step: number }) {
           >
             {index < step ? <Check className="size-4" aria-hidden /> : index + 1}
           </span>
-          <span className={cn('hidden text-sm sm:inline', index === step ? 'font-semibold text-ink-900' : 'text-ink-500')}>{label}</span>
+          <span className={cn('hidden text-sm sm:inline', index === step ? 'font-semibold text-ink-900' : 'text-ink-500')}>{tr(label)}</span>
           {index < STEPS.length - 1 ? <span className="h-px min-w-4 flex-1 bg-line" aria-hidden /> : null}
         </li>
       ))}
@@ -132,8 +137,8 @@ function GymStep({ onNext }: { onNext: () => void }) {
   return (
     <StepCard
       icon={<Building2 className="size-5" />}
-      title="Your gym"
-      description="Shown on invoices and receipts."
+      title={tr("Your gym")}
+      description={tr("Shown on invoices and receipts.")}
       footer={
         <>
           <span />
@@ -141,29 +146,28 @@ function GymStep({ onNext }: { onNext: () => void }) {
             variant="primary"
             loading={mutation.isPending}
             onClick={() => {
-              if (!name.trim()) return toast.info('Enter the gym name')
+              if (!name.trim()) return toast.info(tr("Enter the gym name"))
               mutation.mutate()
             }}
           >
-            Continue
+            {tr("Continue")}
           </Button>
         </>
       }
     >
-      <Field label="Gym name">
+      <Field label={tr("Gym name")}>
         <Input value={name} onChange={(event) => setName(event.target.value)} autoFocus />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Phone" optional>
+        <Field label={tr("Phone")} optional>
           <Input value={phone} onChange={(event) => setPhone(event.target.value)} inputMode="tel" placeholder="+252 …" />
         </Field>
-        <Field label="City" optional>
-          <Input value={city} onChange={(event) => setCity(event.target.value)} placeholder="Mogadishu" />
+        <Field label={tr("City")} optional>
+          <Input value={city} onChange={(event) => setCity(event.target.value)} placeholder={tr("Mogadishu")} />
         </Field>
       </div>
       <Callout tone="info">
-        Money is recorded in {business.settings.currency_code} ({business.settings.currency_symbol}) and each business day
-        follows {business.settings.timezone} time.
+        {tr('Money is recorded in {0} ({1}) and each business day follows {2} time.', { 0: business.settings.currency_code, 1: business.settings.currency_symbol, 2: business.settings.timezone })}
       </Callout>
     </StepCard>
   )
@@ -200,13 +204,13 @@ function MethodsStep({ onBack, onNext }: { onBack: () => void; onNext: () => voi
   return (
     <StepCard
       icon={<Wallet className="size-5" />}
-      title="Where money is kept"
-      description="Turn on every place the gym receives or holds money. Each one is counted separately in Xisaab Xir."
+      title={tr("Where money is kept")}
+      description={tr("Turn on every place the gym receives or holds money. Each one is counted separately in Xisaab Xir.")}
       footer={
         <>
-          <Button onClick={onBack}>Back</Button>
+          <Button onClick={onBack}>{tr("Back")}</Button>
           <Button variant="primary" disabled={!activeCount} onClick={onNext}>
-            Continue
+            {tr("Continue")}
           </Button>
         </>
       }
@@ -230,7 +234,7 @@ function MethodsStep({ onBack, onNext }: { onBack: () => void; onNext: () => voi
                     <p className="text-xs capitalize text-ink-500">{method.type.replace('_', ' ')}</p>
                   </div>
                   <Switch
-                    label={`Use ${method.name}`}
+                    label={tr("Use {0}", { 0: method.name })}
                     checked={method.status === 'active'}
                     onChange={(checked) => statusMutation.mutate({ method, active: checked })}
                   />
@@ -239,19 +243,19 @@ function MethodsStep({ onBack, onNext }: { onBack: () => void; onNext: () => voi
             })}
       </ul>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-        <Field label="Add another" optional className="flex-1">
-          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Premier Bank" />
+        <Field label={tr("Add another")} optional className="flex-1">
+          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder={tr("e.g. Premier Bank")} />
         </Field>
-        <Field label="Type" className="sm:w-40">
+        <Field label={tr("Type")} className="sm:w-40">
           <Select value={type} onChange={(event) => setType(event.target.value as PaymentMethodType)}>
-            <option value="mobile_money">Mobile money</option>
-            <option value="bank">Bank</option>
-            <option value="cash">Cash</option>
-            <option value="other">Other</option>
+            <option value="mobile_money">{tr("Mobile money")}</option>
+            <option value="bank">{tr("Bank")}</option>
+            <option value="cash">{tr("Cash")}</option>
+            <option value="other">{tr("Other")}</option>
           </Select>
         </Field>
         <Button icon={<Plus className="size-4" />} loading={addMutation.isPending} disabled={!name.trim()} onClick={() => addMutation.mutate()}>
-          Add
+          {tr("Add")}
         </Button>
       </div>
     </StepCard>
@@ -290,7 +294,7 @@ function OpeningStep({ onBack }: { onBack: () => void }) {
     onSuccess: async () => {
       invalidateMoney(business.business_id)
       await refreshContext()
-      toast.success('GYMATICK is ready')
+      toast.success(tr("GYMATICK is ready"))
       navigate('/dashboard', { replace: true })
     },
     onError: (error) => {
@@ -302,18 +306,18 @@ function OpeningStep({ onBack }: { onBack: () => void }) {
   return (
     <StepCard
       icon={<Banknote className="size-5" />}
-      title="Opening balances"
-      description="Count the money the gym already has in each place. Xisaab Xir starts from these amounts."
+      title={tr("Opening balances")}
+      description={tr("Count the money the gym already has in each place. Xisaab Xir starts from these amounts.")}
       footer={
         <>
-          <Button onClick={onBack}>Back</Button>
+          <Button onClick={onBack}>{tr("Back")}</Button>
           <Button variant="primary" disabled={!active.length || hasErrors || !goLiveDate} onClick={() => setConfirmOpen(true)}>
-            Finish setup
+            {tr("Finish setup")}
           </Button>
         </>
       }
     >
-      <Field label="Start date" hint="The first business day recorded in GYMATICK">
+      <Field label={tr("Start date")} hint={tr("The first business day recorded in GYMATICK")}>
         <Input type="date" value={goLiveDate} max={businessDate} onChange={(event) => setGoLiveDate(event.target.value)} />
       </Field>
       <div className="flex flex-col gap-3">
@@ -340,23 +344,23 @@ function OpeningStep({ onBack }: { onBack: () => void }) {
         })}
       </div>
       <div className="flex items-center justify-between rounded-xl bg-surface-2 px-4 py-3">
-        <span className="text-sm font-semibold text-ink-600">Total opening balance</span>
+        <span className="text-sm font-semibold text-ink-600">{tr("Total opening balance")}</span>
         <span className="num text-lg font-bold text-ink-900">{formatMoney(total, currency)}</span>
       </div>
-      <Callout tone="warning">Opening balances are locked after the first entry or Xisaab Xir, so count carefully.</Callout>
+      <Callout tone="warning">{tr("Opening balances are locked after the first entry or Xisaab Xir, so count carefully.")}</Callout>
 
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Start GYMATICK with these balances?"
-        description={`${formatMoney(total, currency)} on hand at the start of ${formatBusinessDate(goLiveDate)}.`}
-        confirmLabel="Finish setup"
+        title={tr("Start GYMATICK with these balances?")}
+        description={tr("{0} on hand at the start of {1}.", { 0: formatMoney(total, currency), 1: formatBusinessDate(goLiveDate) })}
+        confirmLabel={tr("Finish setup")}
         loading={mutation.isPending}
         onConfirm={() => mutation.mutate()}
         consequences={[
-          'Each payment method starts from the amount you entered.',
-          'Money can be recorded from the start date onwards.',
-          'These amounts cannot be changed after the first entry.',
+          tr("Each payment method starts from the amount you entered."),
+          tr("Money can be recorded from the start date onwards."),
+          tr("These amounts cannot be changed after the first entry."),
         ]}
       />
     </StepCard>

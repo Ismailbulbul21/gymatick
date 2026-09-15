@@ -10,6 +10,7 @@ import { Field, Input, MoneyInput, Select, Textarea, moneyError, moneyToParam } 
 import { toast } from '@/components/ui/toast'
 import { newIdempotencyKey } from '@/lib/utils'
 import { formatMoney, parseMoneyInput } from '@/lib/money'
+import { tr } from '@/i18n'
 
 /** Moving money between cash, mobile money and the bank: the totals never change. */
 export function TransferDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
@@ -42,7 +43,7 @@ export function TransferDialog({ open, onOpenChange }: { open: boolean; onOpenCh
       }),
     onSuccess: () => {
       invalidateMoney(business.business_id)
-      toast.success('Transfer recorded', { description: 'Balances moved between methods; the gym total is unchanged.' })
+      toast.success(tr("Transfer recorded"), { description: tr("Balances moved between methods; the gym total is unchanged.") })
       setAmount('')
       setNotes('')
       setKey(newIdempotencyKey())
@@ -59,61 +60,60 @@ export function TransferDialog({ open, onOpenChange }: { open: boolean; onOpenCh
     <Modal
       open={open}
       onOpenChange={onOpenChange}
-      title="Transfer between payment methods"
-      description="For example, putting cash into the bank or moving EVC Plus money to the drawer."
+      title={tr("Transfer between payment methods")}
+      description={tr("For example, putting cash into the bank or moving EVC Plus money to the drawer.")}
       icon={<span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><ArrowLeftRight className="size-5" /></span>}
       footer={
         <>
-          <Button onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={() => onOpenChange(false)}>{tr("Cancel")}</Button>
           <Button
             variant="primary"
             loading={mutation.isPending}
             onClick={() => {
               if (!fromId || !toId || fromId === toId) {
-                toast.info('Choose two different payment methods')
+                toast.info(tr("Choose two different payment methods"))
                 return
               }
               if (moneyError(amount, currency)) {
-                toast.info('Enter a valid amount')
+                toast.info(tr("Enter a valid amount"))
                 return
               }
               mutation.mutate()
             }}
           >
-            Record transfer
+            {tr("Record transfer")}
           </Button>
         </>
       }
     >
       <div className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="From">
+          <Field label={tr("From")}>
             <Select value={fromId} onChange={(event) => setFromId(event.target.value)}>
-              <option value="">Choose…</option>
+              <option value="">{tr("Choose…")}</option>
               {active.map((method) => <option key={method.id} value={method.id}>{method.name}</option>)}
             </Select>
           </Field>
-          <Field label="To" error={fromId && fromId === toId ? 'Choose two different methods.' : undefined}>
+          <Field label={tr("To")} error={fromId && fromId === toId ? 'Choose two different methods.' : undefined}>
             <Select value={toId} onChange={(event) => setToId(event.target.value)} invalid={Boolean(fromId && fromId === toId)}>
-              <option value="">Choose…</option>
+              <option value="">{tr("Choose…")}</option>
               {active.map((method) => <option key={method.id} value={method.id}>{method.name}</option>)}
             </Select>
           </Field>
         </div>
-        <Field label="Amount" error={amount ? moneyError(amount, currency) : undefined}>
+        <Field label={tr("Amount")} error={amount ? moneyError(amount, currency) : undefined}>
           <MoneyInput currency={currency} value={amount} onChange={setAmount} />
         </Field>
-        <Field label="Date">
+        <Field label={tr("Date")}>
           <Input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
         </Field>
-        <Field label="Note" optional>
-          <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="e.g. Cash deposited at the bank agent" />
+        <Field label={tr("Note")} optional>
+          <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder={tr("e.g. Cash deposited at the bank agent")} />
         </Field>
         {parsed.ok && fromName && toName ? (
           <Callout tone="info">
             <span className="num font-semibold">{fromName} −{formatMoney(parsed.minor, currency)}</span> ·{' '}
-            <span className="num font-semibold">{toName} +{formatMoney(parsed.minor, currency)}</span> · the gym total stays the same.
-            This is not income or an expense.
+            <span className="num font-semibold">{toName} +{formatMoney(parsed.minor, currency)}</span>{' '}{tr("· the gym total stays the same. This is not income or an expense.")}
           </Callout>
         ) : null}
       </div>
@@ -152,7 +152,7 @@ export function OwnerMovementDialog({ open, onOpenChange }: { open: boolean; onO
       }),
     onSuccess: () => {
       invalidateMoney(business.business_id)
-      toast.success(direction === 'deposit' ? 'Owner deposit recorded' : 'Owner withdrawal recorded')
+      toast.success(direction === 'deposit' ? tr("Owner deposit recorded") : tr("Owner withdrawal recorded"))
       setAmount('')
       setNotes('')
       setKey(newIdempotencyKey())
@@ -165,52 +165,52 @@ export function OwnerMovementDialog({ open, onOpenChange }: { open: boolean; onO
     <Modal
       open={open}
       onOpenChange={onOpenChange}
-      title="Owner deposit or withdrawal"
-      description="Money the owner puts into the gym or takes out of it."
+      title={tr("Owner deposit or withdrawal")}
+      description={tr("Money the owner puts into the gym or takes out of it.")}
       icon={<span className="grid size-10 shrink-0 place-items-center rounded-xl bg-pending-50 text-pending-600"><HandCoins className="size-5" /></span>}
       footer={
         <>
-          <Button onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={() => onOpenChange(false)}>{tr("Cancel")}</Button>
           <Button
             variant="primary"
             loading={mutation.isPending}
             onClick={() => {
               if (!methodId || moneyError(amount, currency) || notes.trim().length < 3) {
-                toast.info('Fill in the amount, the method and a short note')
+                toast.info(tr("Fill in the amount, the method and a short note"))
                 return
               }
               mutation.mutate()
             }}
           >
-            Record
+            {tr("Record")}
           </Button>
         </>
       }
     >
       <div className="flex flex-col gap-4">
-        <Field label="Type">
+        <Field label={tr("Type")}>
           <Select value={direction} onChange={(event) => setDirection(event.target.value as 'deposit' | 'withdrawal')}>
-            <option value="withdrawal">Owner takes money out</option>
-            <option value="deposit">Owner puts money in</option>
+            <option value="withdrawal">{tr("Owner takes money out")}</option>
+            <option value="deposit">{tr("Owner puts money in")}</option>
           </Select>
         </Field>
-        <Field label="Payment method">
+        <Field label={tr("Payment method")}>
           <Select value={methodId} onChange={(event) => setMethodId(event.target.value)}>
-            <option value="">Choose…</option>
+            <option value="">{tr("Choose…")}</option>
             {active.map((method) => <option key={method.id} value={method.id}>{method.name}</option>)}
           </Select>
         </Field>
-        <Field label="Amount" error={amount ? moneyError(amount, currency) : undefined}>
+        <Field label={tr("Amount")} error={amount ? moneyError(amount, currency) : undefined}>
           <MoneyInput currency={currency} value={amount} onChange={setAmount} />
         </Field>
-        <Field label="Date">
+        <Field label={tr("Date")}>
           <Input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
         </Field>
-        <Field label="Note" hint="Required — this explains the movement in the records">
-          <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="e.g. Owner took cash for personal use" />
+        <Field label={tr("Note")} hint={tr("Required — this explains the movement in the records")}>
+          <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder={tr("e.g. Owner took cash for personal use")} />
         </Field>
         <Callout tone="warning">
-          This is <strong>not</strong> income or an expense. It changes the gym balance only, so profit stays correct.
+          {tr("This is")}{' '}<strong>{tr("not")}</strong>{' '}{tr("income or an expense. It changes the gym balance only, so profit stays correct.")}
         </Callout>
       </div>
     </Modal>

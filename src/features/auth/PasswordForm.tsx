@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { Button, Callout } from '@/components/ui/primitives'
 import { Field, Input } from '@/components/ui/form'
 import { cn } from '@/lib/utils'
+import { tr } from '@/i18n'
 
 const RULES = [
   { label: 'At least 10 characters', test: (value: string) => value.length >= 10 },
@@ -43,7 +44,7 @@ export function PasswordForm({ submitLabel, onSaved, disabled }: {
   return (
     <form className="mt-6 flex flex-col gap-4" onSubmit={submit}>
       {error ? <Callout tone="danger">{error}</Callout> : null}
-      <Field label="New password" htmlFor="password">
+      <Field label={tr("New password")} htmlFor="password">
         <Input
           id="password"
           type="password"
@@ -57,14 +58,14 @@ export function PasswordForm({ submitLabel, onSaved, disabled }: {
         {RULES.map((rule, index) => (
           <li key={rule.label} className={cn('flex items-center gap-2 text-xs', passed[index] ? 'text-income-700' : 'text-ink-500')}>
             {passed[index] ? <Check className="size-3.5" aria-hidden /> : <X className="size-3.5" aria-hidden />}
-            {rule.label}
+            {tr(rule.label)}
           </li>
         ))}
       </ul>
       <Field
-        label="Repeat password"
+        label={tr("Repeat password")}
         htmlFor="confirm"
-        error={confirm && !matches ? 'The two passwords do not match.' : undefined}
+        error={confirm && !matches ? tr('The two passwords do not match.') : undefined}
       >
         <Input
           id="confirm"

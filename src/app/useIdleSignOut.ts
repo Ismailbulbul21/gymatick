@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useSession } from './providers/SessionProvider'
 import { toast } from '@/components/ui/toast'
+import { tr } from '@/i18n'
 
 const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'] as const
 const STORAGE_KEY = 'gymatick.last-activity'
@@ -34,7 +35,7 @@ export function useIdleSignOut(minutes: number): void {
     const timer = window.setInterval(() => {
       if (Date.now() - last < limit) return
       window.clearInterval(timer)
-      toast.info('Signed out after inactivity')
+      toast.info(tr("Signed out after inactivity"))
       void signOut()
     }, 15_000)
 

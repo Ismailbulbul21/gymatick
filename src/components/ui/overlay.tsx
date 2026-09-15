@@ -3,6 +3,7 @@ import { Dialog } from 'radix-ui'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from './primitives'
+import { tr } from '@/i18n'
 
 const overlayClass =
   'fixed inset-0 z-40 bg-ink-950/50 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in'
@@ -40,7 +41,7 @@ export function Modal({ open, onOpenChange, title, description, icon, children, 
               </div>
             </div>
             <Dialog.Close asChild>
-              <Button variant="ghost" size="icon" aria-label="Close">
+              <Button variant="ghost" size="icon" aria-label={tr("Close")}>
                 <X className="size-[18px]" />
               </Button>
             </Dialog.Close>
@@ -85,7 +86,7 @@ export function Drawer({ open, onOpenChange, title, description, icon, children,
               </div>
             </div>
             <Dialog.Close asChild>
-              <Button variant="ghost" size="icon" aria-label="Close">
+              <Button variant="ghost" size="icon" aria-label={tr("Close")}>
                 <X className="size-[18px]" />
               </Button>
             </Dialog.Close>

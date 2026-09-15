@@ -11,6 +11,7 @@ import { Field, Input, Select, Switch } from '@/components/ui/form'
 import { toast } from '@/components/ui/toast'
 import { formatMoney, money } from '@/lib/money'
 import type { PaymentMethod } from '@/types/db'
+import { tr } from '@/i18n'
 
 const icons = {
   cash: <Banknote className="size-4" />,
@@ -39,12 +40,12 @@ export default function PaymentMethodsPage() {
     mutationFn: ({ id, status }: { id: string; status: 'active' | 'inactive' }) => setPaymentMethodStatus(id, status),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['payment-methods'] })
-      toast.success('Payment method updated')
+      toast.success(tr("Payment method updated"))
     },
     onError: (error) => toast.error(error),
   })
 
-  if (!can('settings.manage')) return <Forbidden what="payment methods" />
+  if (!can('settings.manage')) return <Forbidden what={tr("payment methods")} />
 
   const balanceOf = (methodId: string) =>
     dashboard.data?.balance?.by_method.find((method) => method.payment_method_id === methodId)?.balance ?? null
@@ -53,9 +54,9 @@ export default function PaymentMethodsPage() {
     <>
       <Card>
         <CardHeader
-          title="Payment methods"
-          description="Where the gym's money is held — each one is counted separately in Xisaab Xir"
-          action={<Button size="sm" icon={<Plus className="size-4" />} onClick={() => setAddOpen(true)}>Add method</Button>}
+          title={tr("Payment methods")}
+          description={tr("Where the gym's money is held — each one is counted separately in Xisaab Xir")}
+          action={<Button size="sm" icon={<Plus className="size-4" />} onClick={() => setAddOpen(true)}>{tr("Add method")}</Button>}
         />
         <div className="p-5 pt-4">
           <ul className="divide-y divide-line">
@@ -78,17 +79,17 @@ export default function PaymentMethodsPage() {
                       ) : null}
                       <StatusBadge status={method.status} />
                       <Switch
-                        label={`${method.name} active`}
+                        label={tr("{0} active", { 0: method.name })}
                         checked={method.status === 'active'}
                         onChange={(checked) => statusMutation.mutate({ id: method.id, status: checked ? 'active' : 'inactive' })}
                       />
-                      <Button size="sm" onClick={() => setEditing(method)}>Edit</Button>
+                      <Button size="sm" onClick={() => setEditing(method)}>{tr("Edit")}</Button>
                     </li>
                   )
                 })}
           </ul>
           <Callout tone="info" className="mt-4">
-            A method holding money cannot be deactivated — move the money to another method first, so the balances stay correct.
+            {tr("A method holding money cannot be deactivated — move the money to another method first, so the balances stay correct.")}
           </Callout>
         </div>
       </Card>
@@ -114,7 +115,7 @@ function MethodModal({ open, method, onClose }: { open: boolean; method: Payment
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['payment-methods'] })
-      toast.success(method ? 'Payment method updated' : 'Payment method added')
+      toast.success(method ? tr("Payment method updated") : tr("Payment method added"))
       onClose()
     },
     onError: (error) => toast.error(error),
@@ -124,42 +125,42 @@ function MethodModal({ open, method, onClose }: { open: boolean; method: Payment
     <Modal
       open={open}
       onOpenChange={(next) => !next && onClose()}
-      title={method ? 'Edit payment method' : 'Add payment method'}
+      title={method ? tr("Edit payment method") : tr("Add payment method")}
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>{tr("Cancel")}</Button>
           <Button
             variant="primary"
             loading={mutation.isPending}
             onClick={() => {
-              if (!name.trim()) return toast.info('Enter a name')
+              if (!name.trim()) return toast.info(tr("Enter a name"))
               mutation.mutate()
             }}
           >
-            Save
+            {tr("Save")}
           </Button>
         </>
       }
     >
       <div className="flex flex-col gap-4">
-        <Field label="Name"><Input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. EVC Plus" autoFocus /></Field>
-        <Field label="Type">
+        <Field label={tr("Name")}><Input value={name} onChange={(event) => setName(event.target.value)} placeholder={tr("e.g. EVC Plus")} autoFocus /></Field>
+        <Field label={tr("Type")}>
           <Select value={type} onChange={(event) => setType(event.target.value as PaymentMethod['type'])} disabled={Boolean(method)}>
-            <option value="cash">Cash</option>
-            <option value="mobile_money">Mobile money</option>
-            <option value="bank">Bank</option>
-            <option value="other">Other</option>
+            <option value="cash">{tr("Cash")}</option>
+            <option value="mobile_money">{tr("Mobile money")}</option>
+            <option value="bank">{tr("Bank")}</option>
+            <option value="other">{tr("Other")}</option>
           </Select>
         </Field>
-        <Field label="Account label" optional hint="Something to recognise the account — never a PIN or password">
-          <Input value={accountLabel} onChange={(event) => setAccountLabel(event.target.value)} placeholder="e.g. Merchant 612…" />
+        <Field label={tr("Account label")} optional hint={tr("Something to recognise the account — never a PIN or password")}>
+          <Input value={accountLabel} onChange={(event) => setAccountLabel(event.target.value)} placeholder={tr("e.g. Merchant 612…")} />
         </Field>
         <label className="flex items-center justify-between rounded-xl border border-line p-3.5 text-sm">
           <span>
-            <span className="block font-semibold text-ink-900">Count in Xisaab Xir</span>
-            <span className="block text-xs text-ink-500">Ask for this balance when closing the day</span>
+            <span className="block font-semibold text-ink-900">{tr("Count in Xisaab Xir")}</span>
+            <span className="block text-xs text-ink-500">{tr("Ask for this balance when closing the day")}</span>
           </span>
-          <Switch label="Count in Xisaab Xir" checked={includeInClosing} onChange={setIncludeInClosing} />
+          <Switch label={tr("Count in Xisaab Xir")} checked={includeInClosing} onChange={setIncludeInClosing} />
         </label>
       </div>
     </Modal>

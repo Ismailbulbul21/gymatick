@@ -10,23 +10,53 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>GYMATICK · Financial Management</title>
     <script>
-      // Apply the saved theme before the first paint, so a dark screen never flashes white.
       ;(function () {
+        // Apply the saved theme and language before the first paint, so a dark screen never flashes white.
         var dark = false
+        var language = 'en'
         try {
           var choice = localStorage.getItem('gymatick.theme')
           dark = choice === 'dark' || (choice !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          language = localStorage.getItem('gymatick.language') === 'so' ? 'so' : 'en'
         } catch (error) {}
         document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+        document.documentElement.lang = language
+
+        // If the app cannot start (for example, settings missing after a deploy), say so instead of
+        // leaving the loading screen spinning forever.
+        function showBootError(detail) {
+          var boot = document.querySelector('#root .boot')
+          if (!boot) return
+          var somali = language === 'so'
+          boot.innerHTML =
+            '<div class="boot-inner boot-error" role="alert"><p class="boot-title">' +
+            (somali ? 'GYMATICK lama furi karin' : 'GYMATICK could not start') +
+            '</p><p class="boot-text">' +
+            (somali
+              ? 'Dib u cusboonaysii bogga. Haddii ay sii dhacdo, la xiriir maamulaha nidaamka.'
+              : 'Reload the page. If it keeps happening, contact whoever manages the system.') +
+            '</p><code class="boot-detail"></code></div>'
+          boot.querySelector('.boot-detail').textContent = String(detail || '')
+        }
+        window.addEventListener('error', function (event) {
+          showBootError(event.error && event.error.message ? event.error.message : event.message)
+        })
+        window.addEventListener('unhandledrejection', function (event) {
+          showBootError(event.reason && event.reason.message ? event.reason.message : event.reason)
+        })
       })()
     </script>
     <style>
       html { background: #f4f6fa; }
       html[data-theme='dark'] { background: #0a1120; }
-      .boot { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; }
+      .boot { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; padding: 0 20px; }
       .boot-inner { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-      .boot-text { display: flex; align-items: center; gap: 8px; color: #6b7891; font: 400 14px/20px 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+      .boot-text { display: flex; align-items: center; gap: 8px; margin: 0; color: #6b7891; font: 400 14px/20px 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif; }
       .boot-spinner { width: 16px; height: 16px; animation: boot-spin 1s linear infinite; }
+      .boot-error { max-width: 440px; gap: 8px; text-align: center; }
+      .boot-title { margin: 0; color: #101a33; font: 700 18px/1.3 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+      html[data-theme='dark'] .boot-title { color: #e6ebf6; }
+      .boot-detail { margin-top: 8px; color: #8a95ab; font: 12px/1.5 ui-monospace, Consolas, monospace; word-break: break-word; }
       @keyframes boot-spin { to { transform: rotate(360deg); } }
       @media (prefers-reduced-motion: reduce) { .boot-spinner { animation: none; } }
     </style>

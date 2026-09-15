@@ -7,6 +7,7 @@ import { useSession } from '@/app/providers/SessionProvider'
 import { Avatar, Button, Callout, Card, CardHeader, ErrorState, PageHeader, Skeleton, StatusBadge } from '@/components/ui/primitives'
 import { formatBusinessDate, formatBusinessDateTime, formatBusinessTime } from '@/lib/dates'
 import { formatMoney, money } from '@/lib/money'
+import { tr } from '@/i18n'
 
 export default function ClosingDetailPage() {
   const { closingId } = useParams<{ closingId: string }>()
@@ -21,13 +22,13 @@ export default function ClosingDetailPage() {
   if (query.isLoading) {
     return (
       <>
-        <PageHeader title="Xisaab Xir" subtitle="Loading closing…" />
+        <PageHeader title={tr("Xisaab Xir")} subtitle={tr("Loading closing…")} />
         <Skeleton className="h-[420px]" />
       </>
     )
   }
   if (query.isError || !query.data) {
-    return <ErrorState message="Could not load this closing" onRetry={() => void query.refetch()} />
+    return <ErrorState message={tr("Could not load this closing")} onRetry={() => void query.refetch()} />
   }
 
   const { closing, lines, transactions, corrections, recalculated, has_corrections: hasCorrections } = query.data
@@ -36,20 +37,20 @@ export default function ClosingDetailPage() {
   return (
     <>
       <PageHeader
-        title={`Xisaab Xir · ${formatBusinessDate(closing.business_date, 'EEEE, d MMM yyyy')}`}
+        title={tr("Xisaab Xir · {0}", { 0: formatBusinessDate(closing.business_date, 'EEEE, d MMM yyyy') })}
         subtitle={
           <span className="flex flex-wrap items-center gap-2">
             <StatusBadge status={closing.status === 'reopened' ? 'reopened' : closing.is_balanced ? 'balanced' : 'difference'} />
             {hasCorrections ? <StatusBadge status="corrected" /> : null}
             <span>
-              Closed by {closing.closed_by_name ?? 'a manager'} · {formatBusinessTime(closing.closed_at, timezone)} · {timezone}
+              {tr("Closed by")}{' '}{closing.closed_by_name ?? tr("a manager")} · {formatBusinessTime(closing.closed_at, timezone)} · {timezone}
             </span>
           </span>
         }
         actions={
           <>
-            <Link to="/xisaab-xir/history"><Button icon={<ArrowLeft className="size-4" />}>History</Button></Link>
-            <Button icon={<Printer className="size-4" />} onClick={() => window.print()}>Print</Button>
+            <Link to="/xisaab-xir/history"><Button icon={<ArrowLeft className="size-4" />}>{tr("History")}</Button></Link>
+            <Button icon={<Printer className="size-4" />} onClick={() => window.print()}>{tr("Print")}</Button>
           </>
         }
       />
@@ -57,14 +58,14 @@ export default function ClosingDetailPage() {
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-4">
           <Card>
-            <CardHeader title="At closing time" description="Snapshot saved when the day was closed — it never changes" />
+            <CardHeader title={tr("At closing time")} description={tr("Snapshot saved when the day was closed — it never changes")} />
             <div className="p-5 pt-4">
               <div className="grid gap-3 sm:grid-cols-4">
                 {[
-                  { label: 'Opening', value: money(closing.opening_total, currency.decimals), tone: '' },
-                  { label: 'Money received', value: money(closing.money_in_total, currency.decimals), tone: 'income' },
-                  { label: 'Money used', value: money(closing.money_out_total, currency.decimals), tone: 'expense' },
-                  { label: 'Expected', value: money(closing.expected_total, currency.decimals), tone: '' },
+                  { label: tr("Opening"), value: money(closing.opening_total, currency.decimals), tone: '' },
+                  { label: tr("Money received"), value: money(closing.money_in_total, currency.decimals), tone: 'income' },
+                  { label: tr("Money used"), value: money(closing.money_out_total, currency.decimals), tone: 'expense' },
+                  { label: tr("Expected"), value: money(closing.expected_total, currency.decimals), tone: '' },
                 ].map((item) => (
                   <div key={item.label} className="flex flex-col gap-1 rounded-xl border border-line bg-surface-2 p-3.5">
                     <span className="text-xs text-ink-500">{item.label}</span>
@@ -80,12 +81,12 @@ export default function ClosingDetailPage() {
                 {closing.is_balanced ? <CircleCheck className="size-5 text-income-600" /> : <TriangleAlert className="size-5 text-expense-600" />}
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-ink-900">
-                    Counted {formatMoney(money(closing.actual_total, currency.decimals), currency)} · difference{' '}
+                    {tr("Counted")}{' '}{formatMoney(money(closing.actual_total, currency.decimals), currency)}{' '}{tr("· difference")}{' '}
                     {formatMoney(difference, currency, { sign: difference !== 0 })}
                   </p>
                   {!closing.is_balanced ? (
                     <p className="text-sm text-ink-600">
-                      {closing.lines_with_difference} payment method{closing.lines_with_difference === 1 ? '' : 's'} did not match.
+                      {closing.lines_with_difference}{' '}{tr("payment method")}{closing.lines_with_difference === 1 ? '' : tr("s")}{' '}{tr("did not match.")}
                     </p>
                   ) : null}
                 </div>
@@ -116,7 +117,7 @@ export default function ClosingDetailPage() {
                         <td className="num px-4 text-right font-semibold text-ink-900">{formatMoney(money(line.actual_amount ?? 0, currency.decimals), currency)}</td>
                         <td className={`num px-4 text-right font-bold ${lineDifference === 0 ? 'text-income-700' : lineDifference < 0 ? 'text-expense-600' : 'text-pending-700'}`}>
                           {formatMoney(lineDifference, currency, { sign: lineDifference !== 0 })}
-                          {lineDifference !== 0 ? <span className="ml-1 text-xs">{lineDifference < 0 ? 'short' : 'over'}</span> : null}
+                          {lineDifference !== 0 ? <span className="ml-1 text-xs">{lineDifference < 0 ? tr("short") : tr("over")}</span> : null}
                         </td>
                       </tr>
                     )
@@ -127,7 +128,7 @@ export default function ClosingDetailPage() {
 
             {closing.notes ? (
               <div className="border-t border-line p-5">
-                <p className="text-[13px] font-semibold text-ink-900">Note from {closing.closed_by_name ?? 'the person who closed'}</p>
+                <p className="text-[13px] font-semibold text-ink-900">{tr("Note from")}{' '}{closing.closed_by_name ?? tr("the person who closed")}</p>
                 <p className="mt-1.5 text-ink-600">{closing.notes}</p>
               </div>
             ) : null}
@@ -135,8 +136,8 @@ export default function ClosingDetailPage() {
 
           <Card className="overflow-hidden">
             <CardHeader
-              title={`Transactions in this period`}
-              description={`${transactions.length} entries between ${formatBusinessDate(closing.period_start, 'd MMM')} and ${formatBusinessDate(closing.business_date, 'd MMM')}`}
+              title={tr("Transactions in this period")}
+              description={tr("{0} entries between {1} and {2}", { 0: transactions.length, 1: formatBusinessDate(closing.period_start, 'd MMM'), 2: formatBusinessDate(closing.business_date, 'd MMM') })}
             />
             <div className="mt-3 overflow-x-auto">
               <table className="w-full border-collapse">
@@ -156,11 +157,11 @@ export default function ClosingDetailPage() {
                     return (
                       <tr key={transaction.id} className={`border-b border-line last:border-b-0 ${voided ? 'opacity-60' : ''}`}>
                         <td className="num px-4 py-3 text-ink-600">{formatBusinessTime(transaction.occurred_at, timezone)}</td>
-                        <td className="num px-4 text-xs font-semibold text-ink-600">TX-{String(transaction.reference_no).padStart(6, '0')}</td>
+                        <td className="num px-4 text-xs font-semibold text-ink-600">{tr("TX-")}{String(transaction.reference_no).padStart(6, '0')}</td>
                         <td className="px-4 font-medium text-ink-900">{transaction.description}</td>
                         <td className="px-4 text-ink-600">{transaction.category ?? '—'}</td>
                         <td className="px-4 text-ink-600">{transaction.payment_method}</td>
-                        <td className="px-4">{voided ? <StatusBadge status="voided" /> : <span className="text-xs text-ink-500">Posted</span>}</td>
+                        <td className="px-4">{voided ? <StatusBadge status="voided" /> : <span className="text-xs text-ink-500">{tr("Posted")}</span>}</td>
                         <td className={`num px-4 text-right font-semibold ${voided ? 'text-ink-400 line-through' : incoming ? 'text-income-700' : 'text-expense-600'}`}>
                           {incoming ? '+' : '−'}
                           {formatMoney(money(transaction.amount, currency.decimals), currency)}
@@ -178,7 +179,7 @@ export default function ClosingDetailPage() {
           {hasCorrections ? (
             <Card className="border-brand-100">
               <CardHeader
-                title={<span className="flex items-center gap-2.5"><span className="grid size-8 place-items-center rounded-lg bg-brand-50 text-brand-600"><RotateCcw className="size-4" /></span> Changed after closing</span>}
+                title={<span className="flex items-center gap-2.5"><span className="grid size-8 place-items-center rounded-lg bg-brand-50 text-brand-600"><RotateCcw className="size-4" /></span>{' '}{tr("Changed after closing")}</span>}
               />
               <div className="flex flex-col gap-4 p-5 pt-4">
                 {corrections.map((correction) => (
@@ -186,8 +187,8 @@ export default function ClosingDetailPage() {
                     <Avatar name={correction.voided_by ?? 'User'} size="sm" />
                     <div className="min-w-0 text-sm">
                       <p className="text-ink-900">
-                        <span className="font-semibold">{correction.voided_by ?? 'Someone'}</span> voided{' '}
-                        <span className="num font-semibold">TX-{String(correction.reference_no).padStart(6, '0')}</span> (
+                        <span className="font-semibold">{correction.voided_by ?? tr("Someone")}</span>{' '}{tr("voided")}{' '}
+                        <span className="num font-semibold">{tr("TX-")}{String(correction.reference_no).padStart(6, '0')}</span> (
                         {formatMoney(money(correction.amount, currency.decimals), currency)})
                       </p>
                       <p className="text-xs text-ink-500">{formatBusinessDateTime(correction.voided_at, timezone)}</p>
@@ -196,7 +197,7 @@ export default function ClosingDetailPage() {
                   </div>
                 ))}
                 <div className="h-px bg-line" />
-                <p className="text-[13px] font-semibold text-ink-900">Recalculated with the correction</p>
+                <p className="text-[13px] font-semibold text-ink-900">{tr("Recalculated with the correction")}</p>
                 {recalculated.map((line) => (
                   <div key={line.payment_method_id} className="flex items-center justify-between text-sm">
                     <span className="text-ink-500">{line.name}</span>
@@ -207,27 +208,27 @@ export default function ClosingDetailPage() {
                   </div>
                 ))}
                 <Callout tone="info">
-                  The snapshot on the left keeps what was known on the night. Reports always use the corrected ledger.
+                  {tr("The snapshot on the left keeps what was known on the night. Reports always use the corrected ledger.")}
                 </Callout>
               </div>
             </Card>
           ) : null}
 
           <Card>
-            <CardHeader title="Timeline" />
+            <CardHeader title={tr("Timeline")} />
             <div className="flex flex-col gap-4 p-5 pt-4">
               <TimelineItem
-                title="Closed"
+                title={tr("Closed")}
                 detail={`${closing.closed_by_name ?? 'A manager'} · ${formatBusinessDateTime(closing.closed_at, timezone)}`}
               />
               {closing.reopened_at ? (
                 <TimelineItem
-                  title="Reopened"
+                  title={tr("Reopened")}
                   detail={`${closing.reopened_by_name ?? 'The owner'} · ${formatBusinessDateTime(closing.reopened_at, timezone)}`}
                   note={closing.reopen_reason}
                 />
               ) : null}
-              {hasCorrections ? <TimelineItem title="Corrected after closing" detail={`${corrections.length} transaction(s) voided`} /> : null}
+              {hasCorrections ? <TimelineItem title={tr("Corrected after closing")} detail={tr("{0} transaction(s) voided", { 0: corrections.length })} /> : null}
             </div>
           </Card>
         </div>

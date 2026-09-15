@@ -1,3 +1,4 @@
+import { FEATURES } from '@/lib/features'
 import type { LoaderFunction } from 'react-router'
 import {
   getCashflow, getClosingPreview, getDashboard, getReport, getSalaryOverview, getTransactionTotals, listAudit,
@@ -101,7 +102,7 @@ export const screenData = {
   }),
   invoiceNew: screenLoader((business, can) =>
     can('invoices.create')
-      ? [...formLists(business.business_id), ensure(queryKeys.customers(business.business_id), () => listCustomers(business.business_id))]
+      ? [...formLists(business.business_id), FEATURES.customers && ensure(queryKeys.customers(business.business_id), () => listCustomers(business.business_id))]
       : [],
   ),
   customers: screenLoader((business, can) =>

@@ -1,3 +1,4 @@
+import { FEATURES } from '@/lib/features'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -12,6 +13,7 @@ import { formatBusinessDate } from '@/lib/dates'
 import { formatMoney, money, parseMoneyInput } from '@/lib/money'
 import { invoiceTotals } from '@/lib/finance'
 import { newIdempotencyKey } from '@/lib/utils'
+import { tr } from '@/i18n'
 
 interface LineDraft {
   id: string
@@ -46,7 +48,7 @@ export default function InvoiceNewPage() {
 
   const categories = useQuery({ queryKey: queryKeys.categories(business.business_id), queryFn: () => listCategories(business.business_id) })
   const methods = useQuery({ queryKey: queryKeys.paymentMethods(business.business_id), queryFn: () => listPaymentMethods(business.business_id) })
-  const customers = useQuery({ queryKey: queryKeys.customers(business.business_id), queryFn: () => listCustomers(business.business_id) })
+  const customers = useQuery({ queryKey: queryKeys.customers(business.business_id), queryFn: () => listCustomers(business.business_id), enabled: FEATURES.customers })
   const unlinkedIncome = useQuery({
     queryKey: [...queryKeys.transactions(business.business_id), 'unlinked-income'],
     queryFn: () =>
@@ -137,13 +139,13 @@ export default function InvoiceNewPage() {
     onSuccess: (result) => {
       invalidateMoney(business.business_id)
       setKey(newIdempotencyKey())
-      toast.success(`Invoice ${result.invoice_number} created`, {
+      toast.success(tr("Invoice {0} created", { 0: result.invoice_number }), {
         description:
           paymentMode === 'link_existing'
-            ? 'Linked to the payment you already recorded — no new income was created.'
+            ? tr("Linked to the payment you already recorded — no new income was created.")
             : paymentMode === 'paid_now'
-              ? 'Payment recorded as income.'
-              : 'Waiting for payment.',
+              ? tr("Payment recorded as income.")
+              : tr("Waiting for payment."),
       })
       navigate(`/invoices/${result.invoice_id}`)
     },
@@ -151,29 +153,30 @@ export default function InvoiceNewPage() {
   })
 
   const submit = () => {
-    if (!categoryId) return toast.info('Choose an income category')
-    if (!lines.some((line) => line.description.trim() && line.unitPrice)) return toast.info('Add at least one line with a description and price')
+    if (!categoryId) return toast.info(tr("Choose an income category"))
+    if (!lines.some((line) => line.description.trim() && line.unitPrice)) return toast.info(tr("Add at least one line with a description and price"))
     if (paymentMode === 'paid_now' && (moneyError(paymentAmount, currency) || !paymentMethodId)) {
-      return toast.info('Check the payment', 'Amount and payment method are required.')
+      return toast.info(tr("Check the payment"), tr("Amount and payment method are required."))
     }
-    if (paymentMode === 'link_existing' && !selectedIncomeId) return toast.info('Choose the payment to attach')
+    if (paymentMode === 'link_existing' && !selectedIncomeId) return toast.info(tr("Choose the payment to attach"))
     mutation.mutate()
   }
 
   return (
     <>
       <PageHeader
-        title="New invoice"
-        subtitle="Qaansheeg cusub · a bill or receipt for a member"
-        actions={<Link to="/invoices"><Button icon={<ArrowLeft className="size-4" />}>Back to invoices</Button></Link>}
+        title={tr("New invoice")}
+        subtitle={tr("Qaansheeg cusub · a bill or receipt for a member")}
+        actions={<Link to="/invoices"><Button icon={<ArrowLeft className="size-4" />}>{tr("Back to invoices")}</Button></Link>}
       />
 
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="flex flex-col gap-4">
           <Card>
-            <CardHeader title="Bill to" description="Leave empty for a walk-in customer" />
+            <CardHeader title={tr("Bill to")} description={FEATURES.customers ? tr("Leave empty for a walk-in customer") : tr("Printed on the invoice")} />
             <div className="flex flex-col gap-4 p-5 pt-4">
-              <Field label="Customer" optional>
+              {FEATURES.customers ? (
+              <Field label={tr("Customer")} optional>
                 <Combobox
                   items={(customers.data ?? []).map((customer) => ({
                     id: customer.id,
@@ -182,8 +185,8 @@ export default function InvoiceNewPage() {
                   }))}
                   value={customerId}
                   onChange={setCustomerId}
-                  placeholder="Search members…"
-                  createLabel="Add customer"
+                  placeholder={tr("Search members…")}
+                  createLabel={tr("Add customer")}
                   onCreate={async (name) => {
                     try {
                       const created = await saveCustomer(business.business_id, { full_name: name })
@@ -195,12 +198,13 @@ export default function InvoiceNewPage() {
                   }}
                 />
               </Field>
+              ) : null}
               {!customerId ? (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Name on the invoice" optional>
-                    <Input value={billToName} onChange={(event) => setBillToName(event.target.value)} placeholder="Walk-in customer" />
+                  <Field label={tr("Name on the invoice")} optional>
+                    <Input value={billToName} onChange={(event) => setBillToName(event.target.value)} placeholder={FEATURES.customers ? tr("Walk-in customer") : tr("Name of the person paying")} />
                   </Field>
-                  <Field label="Phone" optional>
+                  <Field label={tr("Phone")} optional>
                     <Input value={billToPhone} onChange={(event) => setBillToPhone(event.target.value)} inputMode="tel" />
                   </Field>
                 </div>
@@ -209,13 +213,13 @@ export default function InvoiceNewPage() {
           </Card>
 
           <Card>
-            <CardHeader title="Details" />
+            <CardHeader title={tr("Details")} />
             <div className="grid gap-4 p-5 pt-4 sm:grid-cols-3">
-              <Field label="Issue date"><Input type="date" value={issueDate} onChange={(event) => setIssueDate(event.target.value)} /></Field>
-              <Field label="Due date" optional>
+              <Field label={tr("Issue date")}><Input type="date" value={issueDate} onChange={(event) => setIssueDate(event.target.value)} /></Field>
+              <Field label={tr("Due date")} optional>
                 <Input type="date" value={dueDate} min={issueDate} onChange={(event) => setDueDate(event.target.value)} />
               </Field>
-              <Field label="Income category" hint="Used when the invoice is paid">
+              <Field label={tr("Income category")} hint={tr("Used when the invoice is paid")}>
                 <Select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
                   {incomeCategories.map((category) => (
                     <option key={category.id} value={category.id}>{category.name}</option>
@@ -227,30 +231,30 @@ export default function InvoiceNewPage() {
 
           <Card>
             <CardHeader
-              title="What is being charged"
+              title={tr("What is being charged")}
               action={
                 <Button
                   size="sm"
                   icon={<Plus className="size-4" />}
                   onClick={() => setLines((current) => [...current, { id: crypto.randomUUID(), description: '', quantity: '1', unitPrice: '' }])}
                 >
-                  Add line
+                  {tr("Add line")}
                 </Button>
               }
             />
             <div className="flex flex-col gap-3 p-5 pt-4">
               {lines.map((line, index) => (
                 <div key={line.id} className="grid items-end gap-2 sm:grid-cols-[minmax(0,1fr)_80px_130px_40px]">
-                  <Field label={index === 0 ? 'Description' : ''}>
+                  <Field label={index === 0 ? tr("Description") : ''}>
                     <Input
                       value={line.description}
                       onChange={(event) =>
                         setLines((current) => current.map((item) => (item.id === line.id ? { ...item, description: event.target.value } : item)))
                       }
-                      placeholder="e.g. Annual membership"
+                      placeholder={tr("e.g. Annual membership")}
                     />
                   </Field>
-                  <Field label={index === 0 ? 'Qty' : ''}>
+                  <Field label={index === 0 ? tr("Qty") : ''}>
                     <Input
                       inputMode="decimal"
                       value={line.quantity}
@@ -259,7 +263,7 @@ export default function InvoiceNewPage() {
                       }
                     />
                   </Field>
-                  <Field label={index === 0 ? 'Unit price' : ''}>
+                  <Field label={index === 0 ? tr("Unit price") : ''}>
                     <MoneyInput
                       currency={currency}
                       value={line.unitPrice}
@@ -271,7 +275,7 @@ export default function InvoiceNewPage() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    aria-label="Remove line"
+                    aria-label={tr("Remove line")}
                     disabled={lines.length === 1}
                     onClick={() => setLines((current) => current.filter((item) => item.id !== line.id))}
                   >
@@ -280,10 +284,10 @@ export default function InvoiceNewPage() {
                 </div>
               ))}
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Discount" optional>
+                <Field label={tr("Discount")} optional>
                   <MoneyInput currency={currency} value={discount} onChange={setDiscount} />
                 </Field>
-                <Field label="Notes on the invoice" optional>
+                <Field label={tr("Notes on the invoice")} optional>
                   <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
                 </Field>
               </div>
@@ -291,12 +295,12 @@ export default function InvoiceNewPage() {
           </Card>
 
           <Card>
-            <CardHeader title="Payment" description="How this invoice is paid" />
+            <CardHeader title={tr("Payment")} description={tr("How this invoice is paid")} />
             <div className="flex flex-col gap-3 p-5 pt-4">
               {([
-                { value: 'paid_now', label: 'Paid now', hint: 'Records the money as income straight away' },
-                { value: 'unpaid', label: 'Not paid yet', hint: 'The invoice stays pending until payment' },
-                { value: 'link_existing', label: 'Already recorded', hint: 'Attach a payment you recorded earlier — no new income is created' },
+                { value: 'paid_now', label: tr("Paid now"), hint: tr("Records the money as income straight away") },
+                { value: 'unpaid', label: tr("Not paid yet"), hint: tr("The invoice stays pending until payment") },
+                { value: 'link_existing', label: tr("Already recorded"), hint: tr("Attach a payment you recorded earlier — no new income is created") },
               ] as const).map((option) => (
                 <label
                   key={option.value}
@@ -320,10 +324,10 @@ export default function InvoiceNewPage() {
 
               {paymentMode === 'paid_now' ? (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Amount received" error={paymentAmount ? moneyError(paymentAmount, currency) : undefined}>
+                  <Field label={tr("Amount received")} error={paymentAmount ? moneyError(paymentAmount, currency) : undefined}>
                     <MoneyInput currency={currency} value={paymentAmount} onChange={setPaymentAmount} />
                   </Field>
-                  <Field label="Payment method">
+                  <Field label={tr("Payment method")}>
                     <Select value={paymentMethodId} onChange={(event) => setPaymentMethodId(event.target.value)}>
                       {activeMethods.map((method) => <option key={method.id} value={method.id}>{method.name}</option>)}
                     </Select>
@@ -333,9 +337,9 @@ export default function InvoiceNewPage() {
 
               {paymentMode === 'link_existing' ? (
                 <div className="flex flex-col gap-3">
-                  <Field label="Payment to attach" hint="Only payments that are not already on an invoice">
+                  <Field label={tr("Payment to attach")} hint={tr("Only payments that are not already on an invoice")}>
                     <Select value={selectedIncomeId ?? ''} onChange={(event) => setSelectedIncomeId(event.target.value || null)}>
-                      <option value="">Choose a recorded payment…</option>
+                      <option value="">{tr("Choose a recorded payment…")}</option>
                       {(unlinkedIncome.data?.rows ?? [])
                         .filter((row) => !row.invoice_id && row.status === 'posted')
                         .map((row) => (
@@ -347,7 +351,7 @@ export default function InvoiceNewPage() {
                     </Select>
                   </Field>
                   <Callout tone="info">
-                    No new income will be recorded — this invoice points to the payment that is already in the ledger.
+                    {tr("No new income will be recorded — this invoice points to the payment that is already in the ledger.")}
                   </Callout>
                 </div>
               ) : null}
@@ -356,18 +360,18 @@ export default function InvoiceNewPage() {
         </div>
 
         <Card className="sticky top-24">
-          <CardHeader title="Totals" description="What the customer sees" />
+          <CardHeader title={tr("Totals")} description={tr("What the customer sees")} />
           <div className="flex flex-col gap-2 p-5 pt-4 text-sm">
-            <Row label="Subtotal" value={formatMoney(totals.subtotal, currency)} />
-            {totals.discount > 0 ? <Row label="Discount" value={`−${formatMoney(totals.discount, currency)}`} /> : null}
+            <Row label={tr("Subtotal")} value={formatMoney(totals.subtotal, currency)} />
+            {totals.discount > 0 ? <Row label={tr("Discount")} value={`−${formatMoney(totals.discount, currency)}`} /> : null}
             <div className="h-px bg-line" />
-            <Row label="Total" value={formatMoney(totals.total, currency)} strong />
-            <Row label="Paid" value={formatMoney(totals.paid, currency)} />
-            <Row label="Balance due" value={formatMoney(totals.balance, currency)} strong />
+            <Row label={tr("Total")} value={formatMoney(totals.total, currency)} strong />
+            <Row label={tr("Paid")} value={formatMoney(totals.paid, currency)} />
+            <Row label={tr("Balance due")} value={formatMoney(totals.balance, currency)} strong />
             <Button variant="primary" size="lg" className="mt-4 w-full" loading={mutation.isPending} onClick={submit} disabled={!can('invoices.create')}>
-              Create invoice
+              {tr("Create invoice")}
             </Button>
-            <Link to="/invoices"><Button className="w-full">Cancel</Button></Link>
+            <Link to="/invoices"><Button className="w-full">{tr("Cancel")}</Button></Link>
           </div>
         </Card>
       </div>

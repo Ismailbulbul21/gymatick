@@ -1,3 +1,4 @@
+import { getLanguage, tr } from '@/i18n'
 /** Database functions raise coded errors: message = CODE, detail = sentence, hint = JSON.
  *  This turns them into something a gym owner can act on. */
 import type { PostgrestError } from '@supabase/supabase-js'
@@ -60,6 +61,13 @@ const FALLBACK: Record<string, string> = {
   INVALID_INPUT: 'Check the details and try again.',
 }
 
+/** A database sentence in the interface language: its own translation when there is one, otherwise the
+ *  translated general message for its code. */
+function localizedMessage(detail: string | undefined, code: string): string {
+  if (detail && (getLanguage() === 'en' || tr(detail) !== detail)) return tr(detail)
+  return tr(FALLBACK[code] ?? detail ?? 'Something went wrong. Please try again.')
+}
+
 const isPostgrestError = (error: unknown): error is PostgrestError =>
   typeof error === 'object' && error !== null && 'message' in error && 'code' in error
 
@@ -74,11 +82,11 @@ export function parseAppError(error: unknown): AppError {
     }
     const detail = typeof error.details === 'string' && error.details ? error.details : undefined
     if (error.code === '42501') {
-      return { code: 'PERMISSION_DENIED', message: FALLBACK.PERMISSION_DENIED!, hint: {}, raw: error }
+      return { code: 'PERMISSION_DENIED', message: tr(FALLBACK.PERMISSION_DENIED!), hint: {}, raw: error }
     }
     return {
       code,
-      message: detail ?? FALLBACK[code] ?? 'Something went wrong. Please try again.',
+      message: localizedMessage(detail, code),
       field: FIELD_BY_CODE[code],
       hint,
       raw: error,
@@ -89,13 +97,13 @@ export function parseAppError(error: unknown): AppError {
     return {
       code: offline ? 'OFFLINE' : 'NETWORK',
       message: offline
-        ? 'You are offline. Your entry was not saved.'
-        : 'Cannot reach the server right now. Your data is safe — try again.',
+        ? tr('You are offline. Your entry was not saved.')
+        : tr('Cannot reach the server right now. Your data is safe — try again.'),
       hint: {},
       raw: error,
     }
   }
-  return { code: 'UNEXPECTED', message: 'Something went wrong. Please try again.', hint: {}, raw: error }
+  return { code: 'UNEXPECTED', message: tr('Something went wrong. Please try again.'), hint: {}, raw: error }
 }
 
 export const errorMessage = (error: unknown): string => parseAppError(error).message

@@ -9,6 +9,7 @@ import { TransactionsScreen } from './TransactionsScreen'
 import { OwnerMovementDialog, TransferDialog } from './MoneyMovementDialogs'
 import { formatBusinessDate } from '@/lib/dates'
 import { formatMoney, money } from '@/lib/money'
+import { tr } from '@/i18n'
 
 const METHOD_COLORS = ['var(--color-method-1)', 'var(--color-method-2)', 'var(--color-method-3)', 'var(--color-method-4)', 'var(--color-method-5)']
 
@@ -28,7 +29,7 @@ export default function TransactionsPage() {
   const balanceCard = can('dashboard.financials') ? (
     <Card className="flex flex-wrap items-stretch gap-y-4 p-4">
       <div className="min-w-[220px] px-2">
-        <p className="text-xs font-semibold text-ink-600">Current balance</p>
+        <p className="text-xs font-semibold text-ink-600">{tr("Current balance")}</p>
         {summary.isLoading ? (
           <Skeleton className="mt-1 h-7 w-32" />
         ) : (
@@ -38,8 +39,8 @@ export default function TransactionsPage() {
         )}
         <p className="text-xs text-ink-500">
           {balance?.checkpoint_date
-            ? `Counted ${formatBusinessDate(balance.checkpoint_date, 'd MMM')} + movements since`
-            : 'From the opening balances'}
+            ? tr("Counted {0} + movements since", { 0: formatBusinessDate(balance.checkpoint_date, 'd MMM') })
+            : tr("From the opening balances")}
         </p>
       </div>
       {(balance?.by_method ?? []).map((method, index) => (
@@ -62,10 +63,10 @@ export default function TransactionsPage() {
         extraActions={
           <>
             {can('money.owner_movements') ? (
-              <Button icon={<HandCoins className="size-4" />} onClick={() => setOwnerOpen(true)}>Owner money</Button>
+              <Button icon={<HandCoins className="size-4" />} onClick={() => setOwnerOpen(true)}>{tr("Owner money")}</Button>
             ) : null}
             {can('money.transfer') ? (
-              <Button icon={<ArrowLeftRight className="size-4" />} onClick={() => setTransferOpen(true)}>Transfer</Button>
+              <Button icon={<ArrowLeftRight className="size-4" />} onClick={() => setTransferOpen(true)}>{tr("Transfer")}</Button>
             ) : null}
           </>
         }

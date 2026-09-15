@@ -18,6 +18,7 @@ import { formatBusinessDate, formatBusinessTime } from '@/lib/dates'
 import { formatMoney, minorToDecimalString, money, parseMoneyInput, type Minor } from '@/lib/money'
 import { closingOutcome } from '@/lib/finance'
 import { newIdempotencyKey } from '@/lib/utils'
+import { tr } from '@/i18n'
 
 const methodIcon = (type: string) =>
   type === 'cash' ? <Banknote className="size-4" /> : type === 'bank' ? <Landmark className="size-4" /> : <Smartphone className="size-4" />
@@ -75,10 +76,10 @@ export default function XisaabXirPage() {
       invalidateMoney(business.business_id)
       setConfirmOpen(false)
       setIdempotencyKey(newIdempotencyKey())
-      toast.success(`${formatBusinessDate(result.business_date)} is closed`, {
+      toast.success(tr("{0} is closed", { 0: formatBusinessDate(result.business_date) }), {
         description: result.is_balanced
-          ? 'Counted money matches the records.'
-          : `Difference ${formatMoney(money(result.difference_total, currency.decimals), currency, { sign: true })}`,
+          ? tr("Counted money matches the records.")
+          : tr("Difference {0}", { 0: formatMoney(money(result.difference_total, currency.decimals), currency, { sign: true }) }),
       })
     },
     onError: (error) => {
@@ -94,7 +95,7 @@ export default function XisaabXirPage() {
       invalidateMoney(business.business_id)
       setReopenOpen(false)
       setReopenReason('')
-      toast.success('Day reopened', { description: 'You can record and correct entries for this day again.' })
+      toast.success(tr("Day reopened"), { description: tr("You can record and correct entries for this day again.") })
     },
     onError: (error) => toast.error(error),
   })
@@ -102,7 +103,7 @@ export default function XisaabXirPage() {
   if (preview.isLoading) {
     return (
       <>
-        <PageHeader title="Xisaab Xir" subtitle="Daily closing" />
+        <PageHeader title={tr("Xisaab Xir")} subtitle={tr("Daily closing")} />
         <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <Skeleton className="h-[360px]" />
           <Skeleton className="h-[240px]" />
@@ -118,14 +119,14 @@ export default function XisaabXirPage() {
         <Card className="p-6">
           <EmptyState
             icon={<Wallet className="size-6" />}
-            title="Set your opening balances first"
-            description="GYMATICK needs to know how much money the gym holds before it can close a day."
-            actions={<Button variant="primary" onClick={() => navigate('/onboarding')}>Set opening balances</Button>}
+            title={tr("Set your opening balances first")}
+            description={tr("GYMATICK needs to know how much money the gym holds before it can close a day.")}
+            actions={<Button variant="primary" onClick={() => navigate('/onboarding')}>{tr("Set opening balances")}</Button>}
           />
         </Card>
       )
     }
-    return <ErrorState message="Could not load Xisaab Xir" onRetry={() => void preview.refetch()} />
+    return <ErrorState message={tr("Could not load Xisaab Xir")} onRetry={() => void preview.refetch()} />
   }
 
   /* Already closed -------------------------------------------------------- */
@@ -134,9 +135,9 @@ export default function XisaabXirPage() {
     return (
       <>
         <PageHeader
-          title="Xisaab Xir"
-          subtitle={`Daily closing · ${formatBusinessDate(data.business_date, 'EEEE, d MMMM yyyy')}`}
-          actions={<Link to="/xisaab-xir/history"><Button icon={<History className="size-4" />}>History</Button></Link>}
+          title={tr("Xisaab Xir")}
+          subtitle={tr("Daily closing · {0}", { 0: formatBusinessDate(data.business_date, 'EEEE, d MMMM yyyy') })}
+          actions={<Link to="/xisaab-xir/history"><Button icon={<History className="size-4" />}>{tr("History")}</Button></Link>}
         />
         <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <Card className="p-8">
@@ -145,9 +146,9 @@ export default function XisaabXirPage() {
                 <Lock className="size-7" />
               </span>
               <div>
-                <h2 className="text-2xl font-bold text-ink-900">{formatBusinessDate(data.business_date, 'd MMM')} is closed</h2>
+                <h2 className="text-2xl font-bold text-ink-900">{formatBusinessDate(data.business_date, 'd MMM')}{' '}{tr("is closed")}</h2>
                 <p className="mt-1 text-ink-500">
-                  Closed at {formatBusinessTime(data.closed_at ?? null, timezone)} · {business.settings.timezone}
+                  {tr("Closed at")}{' '}{formatBusinessTime(data.closed_at ?? null, timezone)} · {business.settings.timezone}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <StatusBadge status={data.is_balanced ? 'balanced' : 'difference'} />
@@ -162,9 +163,9 @@ export default function XisaabXirPage() {
 
             <div className="mt-7 grid gap-3 sm:grid-cols-3">
               {[
-                { label: 'Expected', value: money(data.expected_total ?? 0, currency.decimals), tone: '' },
-                { label: 'Counted', value: money(data.actual_total ?? 0, currency.decimals), tone: '' },
-                { label: 'Difference', value: difference, tone: difference === 0 ? 'income' : 'expense' },
+                { label: tr("Expected"), value: money(data.expected_total ?? 0, currency.decimals), tone: '' },
+                { label: tr("Counted"), value: money(data.actual_total ?? 0, currency.decimals), tone: '' },
+                { label: tr("Difference"), value: difference, tone: difference === 0 ? 'income' : 'expense' },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -185,31 +186,30 @@ export default function XisaabXirPage() {
             </div>
 
             <Callout tone="info" className="mt-6">
-              <strong className="num">Tomorrow opens with {formatMoney(money(data.actual_total ?? 0, currency.decimals), currency)}</strong> — the money you
-              counted. Anything recorded from now on goes to <strong>{formatBusinessDate(data.next_open_date ?? data.business_date, 'd MMM')}</strong>.
+              <strong className="num">{tr("Tomorrow opens with")}{' '}{formatMoney(money(data.actual_total ?? 0, currency.decimals), currency)}</strong>{' '}{tr("— the money you counted. Anything recorded from now on goes to")}{' '}<strong>{formatBusinessDate(data.next_open_date ?? data.business_date, 'd MMM')}</strong>.
             </Callout>
 
             <div className="mt-6 flex flex-wrap gap-2">
               <Link to={`/xisaab-xir/${data.closing_id}`}>
-                <Button variant="primary" icon={<CalendarCheck className="size-4" />}>View closing</Button>
+                <Button variant="primary" icon={<CalendarCheck className="size-4" />}>{tr("View closing")}</Button>
               </Link>
-              <Link to="/xisaab-xir/history"><Button icon={<History className="size-4" />}>All closings</Button></Link>
+              <Link to="/xisaab-xir/history"><Button icon={<History className="size-4" />}>{tr("All closings")}</Button></Link>
               <div className="flex-1" />
               {can('closings.reopen') ? (
                 <Button variant="ghost" icon={<RotateCcw className="size-4" />} onClick={() => setReopenOpen(true)}>
-                  Reopen day
+                  {tr("Reopen day")}
                 </Button>
               ) : null}
             </div>
           </Card>
 
           <Card>
-            <CardHeader title="What happens now" />
+            <CardHeader title={tr("What happens now")} />
             <div className="flex flex-col gap-3 p-5 pt-4 text-sm text-ink-600">
-              <p className="flex gap-2.5"><Lock className="size-4 shrink-0 text-ink-500" /> Transactions dated this day are locked.</p>
-              <p className="flex gap-2.5"><CalendarDays className="size-4 shrink-0 text-ink-500" /> New entries go to the next day.</p>
-              <p className="flex gap-2.5"><Wallet className="size-4 shrink-0 text-ink-500" /> Tomorrow starts from the money you counted.</p>
-              <p className="flex gap-2.5"><ShieldCheck className="size-4 shrink-0 text-ink-500" /> Only the owner can reopen the day, with a reason.</p>
+              <p className="flex gap-2.5"><Lock className="size-4 shrink-0 text-ink-500" />{' '}{tr("Transactions dated this day are locked.")}</p>
+              <p className="flex gap-2.5"><CalendarDays className="size-4 shrink-0 text-ink-500" />{' '}{tr("New entries go to the next day.")}</p>
+              <p className="flex gap-2.5"><Wallet className="size-4 shrink-0 text-ink-500" />{' '}{tr("Tomorrow starts from the money you counted.")}</p>
+              <p className="flex gap-2.5"><ShieldCheck className="size-4 shrink-0 text-ink-500" />{' '}{tr("Only the owner can reopen the day, with a reason.")}</p>
             </div>
           </Card>
         </div>
@@ -218,25 +218,25 @@ export default function XisaabXirPage() {
           open={reopenOpen}
           onOpenChange={setReopenOpen}
           destructive
-          title="Reopen this day?"
-          description="Only do this if something must be corrected for this day."
-          confirmLabel="Reopen day"
+          title={tr("Reopen this day?")}
+          description={tr("Only do this if something must be corrected for this day.")}
+          confirmLabel={tr("Reopen day")}
           loading={reopenMutation.isPending}
           onConfirm={() => {
             if (reopenReason.trim().length < 5) {
-              toast.info('Please give a reason', 'At least 5 characters.')
+              toast.info(tr("Please give a reason"), tr("At least 5 characters."))
               return
             }
             reopenMutation.mutate()
           }}
           consequences={[
-            'The closing is kept in the history, marked as reopened.',
-            'The day becomes editable again and must be closed once more.',
-            'Everyone with access can see who reopened it and why.',
+            tr("The closing is kept in the history, marked as reopened."),
+            tr("The day becomes editable again and must be closed once more."),
+            tr("Everyone with access can see who reopened it and why."),
           ]}
         >
-          <Field label="Reason for reopening">
-            <Textarea value={reopenReason} onChange={(event) => setReopenReason(event.target.value)} placeholder="e.g. A cash payment was missed" />
+          <Field label={tr("Reason for reopening")}>
+            <Textarea value={reopenReason} onChange={(event) => setReopenReason(event.target.value)} placeholder={tr("e.g. A cash payment was missed")} />
           </Field>
         </ConfirmDialog>
       </>
@@ -291,23 +291,23 @@ export default function XisaabXirPage() {
   return (
     <>
       <PageHeader
-        title="Xisaab Xir"
+        title={tr("Xisaab Xir")}
         subtitle={
           <span className="flex flex-wrap items-center gap-2">
-            <span>Daily closing · {formatBusinessDate(data?.business_date ?? business.business_date, 'EEEE, d MMMM yyyy')}</span>
+            <span>{tr("Daily closing ·")}{' '}{formatBusinessDate(data?.business_date ?? business.business_date, 'EEEE, d MMMM yyyy')}</span>
             {data?.period_start && data.period_start !== data.business_date ? (
               <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-pending-50 px-2.5 text-xs font-semibold text-pending-700">
-                <CalendarDays className="size-3.5" /> Covers {formatBusinessDate(data.period_start, 'd MMM')} – {formatBusinessDate(data.business_date, 'd MMM')}
+                <CalendarDays className="size-3.5" />{' '}{tr("Covers")}{' '}{formatBusinessDate(data.period_start, 'd MMM')} – {formatBusinessDate(data.business_date, 'd MMM')}
               </span>
             ) : null}
           </span>
         }
-        actions={<Link to="/xisaab-xir/history"><Button icon={<History className="size-4" />}>History</Button></Link>}
+        actions={<Link to="/xisaab-xir/history"><Button icon={<History className="size-4" />}>{tr("History")}</Button></Link>}
       />
 
       {!can('closings.perform') ? (
         <Callout tone="info">
-          You can see the figures, but only staff with Xisaab Xir access can close the day.
+          {tr("You can see the figures, but only staff with Xisaab Xir access can close the day.")}
         </Callout>
       ) : null}
 
@@ -315,11 +315,11 @@ export default function XisaabXirPage() {
         {/* Step 1 */}
         <Card>
           <CardHeader
-            title={<span className="flex items-center gap-3"><StepBadge step={1} /> Review the day</span>}
-            description={`Everything recorded for this period, calculated by the system`}
+            title={<span className="flex items-center gap-3"><StepBadge step={1} />{' '}{tr("Review the day")}</span>}
+            description={tr("Everything recorded for this period, calculated by the system")}
             action={
               <Link to="/transactions" className="text-sm font-semibold text-brand-600">
-                {data?.transaction_count ?? 0} transactions
+                {data?.transaction_count ?? 0}{' '}{tr("transactions")}
               </Link>
             }
           />
@@ -348,7 +348,7 @@ export default function XisaabXirPage() {
 
         <div className="flex flex-col gap-4">
           <Card>
-            <CardHeader title="Before you close" />
+            <CardHeader title={tr("Before you close")} />
             <ul className="flex flex-col gap-2.5 p-5 pt-4 text-sm text-ink-600">
               {['Count the cash drawer twice', 'Check EVC Plus, ZAAD and SAHAL balances in their apps', 'Check the bank balance', 'Record any expense still missing'].map((item) => (
                 <li key={item} className="flex items-start gap-2.5">
@@ -359,11 +359,11 @@ export default function XisaabXirPage() {
             </ul>
           </Card>
           <Card>
-            <CardHeader title="When you close" />
+            <CardHeader title={tr("When you close")} />
             <div className="flex flex-col gap-2.5 p-5 pt-4 text-sm text-ink-600">
-              <p className="flex gap-2.5"><Lock className="size-4 shrink-0 text-ink-500" /> Transactions dated in this period are locked.</p>
-              <p className="flex gap-2.5"><CalendarDays className="size-4 shrink-0 text-ink-500" /> New entries go to the next day.</p>
-              <p className="flex gap-2.5"><Wallet className="size-4 shrink-0 text-ink-500" /> Tomorrow starts from the money you counted.</p>
+              <p className="flex gap-2.5"><Lock className="size-4 shrink-0 text-ink-500" />{' '}{tr("Transactions dated in this period are locked.")}</p>
+              <p className="flex gap-2.5"><CalendarDays className="size-4 shrink-0 text-ink-500" />{' '}{tr("New entries go to the next day.")}</p>
+              <p className="flex gap-2.5"><Wallet className="size-4 shrink-0 text-ink-500" />{' '}{tr("Tomorrow starts from the money you counted.")}</p>
             </div>
           </Card>
         </div>
@@ -372,12 +372,12 @@ export default function XisaabXirPage() {
       {/* Step 2 */}
       <Card className="overflow-hidden">
         <CardHeader
-          title={<span className="flex items-center gap-3"><StepBadge step={2} /> Count the money</span>}
-          description="Count the cash and check each mobile money and bank balance"
+          title={<span className="flex items-center gap-3"><StepBadge step={2} />{' '}{tr("Count the money")}</span>}
+          description={tr("Count the cash and check each mobile money and bank balance")}
           action={
             data?.transfer_total && money(data.transfer_total, currency.decimals) > 0 ? (
               <span className="text-xs text-ink-500">
-                In/Out include {formatMoney(money(data.transfer_total, currency.decimals), currency)} of transfers between methods
+                {tr("In/Out include")}{' '}{formatMoney(money(data.transfer_total, currency.decimals), currency)}{' '}{tr("of transfers between methods")}
               </span>
             ) : undefined
           }
@@ -423,8 +423,8 @@ export default function XisaabXirPage() {
                         </div>
                         <Button
                           size="icon"
-                          aria-label={`Use expected amount for ${line.name}`}
-                          title="Same as expected"
+                          aria-label={tr("Use expected amount for {0}", { 0: line.name })}
+                          title={tr("Same as expected")}
                           onClick={() =>
                             setCounted((current) => ({
                               ...current,
@@ -447,7 +447,7 @@ export default function XisaabXirPage() {
                         <span className={`num inline-flex items-center gap-1.5 font-bold ${difference < 0 ? 'text-expense-600' : 'text-pending-700'}`}>
                           <TriangleAlert className="size-4" />
                           {formatMoney(difference, currency, { sign: true })}
-                          <span className="text-xs font-semibold">{difference < 0 ? 'short' : 'over'}</span>
+                          <span className="text-xs font-semibold">{difference < 0 ? tr("short") : tr("over")}</span>
                         </span>
                       )}
                     </td>
@@ -455,7 +455,7 @@ export default function XisaabXirPage() {
                 )
               })}
               <tr className="bg-surface-2">
-                <td className="px-4 py-3 font-bold text-ink-900">Total</td>
+                <td className="px-4 py-3 font-bold text-ink-900">{tr("Total")}</td>
                 <td className="num px-4 text-right font-semibold text-ink-900">{formatMoney(opening, currency)}</td>
                 <td />
                 <td />
@@ -474,16 +474,15 @@ export default function XisaabXirPage() {
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card>
           <CardHeader
-            title={<span className="flex items-center gap-3"><StepBadge step={3} /> Confirm and close</span>}
-            description="A note is required when the counted money does not match"
+            title={<span className="flex items-center gap-3"><StepBadge step={3} />{' '}{tr("Confirm and close")}</span>}
+            description={tr("A note is required when the counted money does not match")}
           />
           <div className="flex flex-col gap-4 p-5 pt-4">
             {!allEntered ? (
               <Callout tone="info">
-                <p className="font-bold text-ink-900">Waiting for the count</p>
+                <p className="font-bold text-ink-900">{tr("Waiting for the count")}</p>
                 <p className="text-sm text-ink-600">
-                  {countedLines.filter((item) => item.valid).length} of {countedLines.length} payment methods counted. The
-                  difference shows once every one is entered.
+                  {countedLines.filter((item) => item.valid).length}{' '}{tr("of")}{' '}{countedLines.length}{' '}{tr("payment methods counted. The difference shows once every one is entered.")}
                 </p>
               </Callout>
             ) : (
@@ -491,12 +490,12 @@ export default function XisaabXirPage() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className={`font-bold ${outcome.balanced ? 'text-income-700' : 'text-expense-600'}`}>
-                    {outcome.balanced ? 'Balanced' : `Difference ${formatMoney(outcome.difference, currency, { sign: true })}`}
+                    {outcome.balanced ? tr("Balanced") : tr("Difference {0}", { 0: formatMoney(outcome.difference, currency, { sign: true }) })}
                   </p>
                   <p className="text-sm text-ink-600">
                     {outcome.balanced
-                      ? 'The counted money matches the records.'
-                      : `${outcome.linesWithDifference} payment method${outcome.linesWithDifference > 1 ? 's do' : ' does'} not match. Explain it before closing.`}
+                      ? tr("The counted money matches the records.")
+                      : tr("{0} payment method{1} not match. Explain it before closing.", { 0: outcome.linesWithDifference, 1: outcome.linesWithDifference > 1 ? 's do' : ' does' })}
                   </p>
                 </div>
                 <span className={`num text-[22px] font-bold ${outcome.balanced ? 'text-income-700' : 'text-expense-600'}`}>
@@ -507,21 +506,21 @@ export default function XisaabXirPage() {
             )}
 
             <Field
-              label="Note about the difference"
+              label={tr("Note about the difference")}
               optional={!allEntered || outcome.balanced}
               error={needsNote && notes.length > 0 ? 'At least 5 characters.' : undefined}
-              hint={outcome.balanced ? 'Optional — anything worth remembering about today' : undefined}
+              hint={outcome.balanced ? tr("Optional — anything worth remembering about today") : undefined}
             >
               <Textarea
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                placeholder="e.g. Cash drawer short by 15. Counted twice; checking front-desk change tomorrow."
+                placeholder={tr("e.g. Cash drawer short by 15. Counted twice; checking front-desk change tomorrow.")}
               />
             </Field>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
               <span className="flex items-center gap-2 text-sm text-ink-500">
-                <Avatar name={userName} size="sm" /> Closing as {userName}
+                <Avatar name={userName} size="sm" />{' '}{tr("Closing as")}{' '}{userName}
               </span>
               <Button
                 variant="primary"
@@ -530,23 +529,23 @@ export default function XisaabXirPage() {
                 disabled={!canClose}
                 onClick={() => setConfirmOpen(true)}
               >
-                Xisaab Xir — Close {formatBusinessDate(data?.business_date ?? business.business_date, 'd MMM')}
+                {tr("Xisaab Xir — Close")}{' '}{formatBusinessDate(data?.business_date ?? business.business_date, 'd MMM')}
               </Button>
             </div>
             {!allEntered ? (
-              <p className="text-xs text-ink-500">Enter the counted amount for every payment method to close the day.</p>
+              <p className="text-xs text-ink-500">{tr("Enter the counted amount for every payment method to close the day.")}</p>
             ) : needsNote ? (
-              <p className="text-xs text-ink-500">Add a note explaining the difference to close the day.</p>
+              <p className="text-xs text-ink-500">{tr("Add a note explaining the difference to close the day.")}</p>
             ) : null}
           </div>
         </Card>
 
         <Card>
-          <CardHeader title="Last closing" description="The day this one continues from" />
+          <CardHeader title={tr("Last closing")} description={tr("The day this one continues from")} />
           <div className="flex flex-col gap-2 p-5 pt-4 text-sm">
-            <div className="flex justify-between"><span className="text-ink-500">Counted on</span><span className="font-semibold">{formatBusinessDate(data?.checkpoint_date ?? null)}</span></div>
-            <div className="flex justify-between"><span className="text-ink-500">Opening balance now</span><span className="num font-semibold">{formatMoney(opening, currency)}</span></div>
-            <Link to="/xisaab-xir/history" className="mt-2 text-sm font-semibold text-brand-600">See all closings →</Link>
+            <div className="flex justify-between"><span className="text-ink-500">{tr("Counted on")}</span><span className="font-semibold">{formatBusinessDate(data?.checkpoint_date ?? null)}</span></div>
+            <div className="flex justify-between"><span className="text-ink-500">{tr("Opening balance now")}</span><span className="num font-semibold">{formatMoney(opening, currency)}</span></div>
+            <Link to="/xisaab-xir/history" className="mt-2 text-sm font-semibold text-brand-600">{tr("See all closings →")}</Link>
           </div>
         </Card>
       </div>
@@ -554,24 +553,24 @@ export default function XisaabXirPage() {
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title={`Close ${formatBusinessDate(data?.business_date ?? business.business_date)}?`}
-        description="Check the numbers one last time. Closing locks the day."
+        title={tr("Close {0}?", { 0: formatBusinessDate(data?.business_date ?? business.business_date) })}
+        description={tr("Check the numbers one last time. Closing locks the day.")}
         icon={<span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><Lock className="size-5" /></span>}
-        confirmLabel="Close the day"
-        cancelLabel="Go back"
+        confirmLabel={tr("Close the day")}
+        cancelLabel={tr("Go back")}
         loading={closeMutation.isPending}
         onConfirm={() => closeMutation.mutate()}
         consequences={[
-          `Transactions dated ${formatBusinessDate(data?.business_date ?? business.business_date, 'd MMM')} will be locked.`,
-          'Anything recorded after this goes to the next day.',
-          'Only the owner can reopen this day, with a reason.',
+          tr("Transactions dated {0} will be locked.", { 0: formatBusinessDate(data?.business_date ?? business.business_date, 'd MMM') }),
+          tr("Anything recorded after this goes to the next day."),
+          tr("Only the owner can reopen this day, with a reason."),
         ]}
       >
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            { label: 'Expected', value: expected },
-            { label: 'Counted', value: actualTotal },
-            { label: 'Difference', value: outcome.difference },
+            { label: tr("Expected"), value: expected },
+            { label: tr("Counted"), value: actualTotal },
+            { label: tr("Difference"), value: outcome.difference },
           ].map((item) => (
             <div
               key={item.label}

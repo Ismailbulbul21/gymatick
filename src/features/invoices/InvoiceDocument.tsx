@@ -2,6 +2,7 @@ import { GymatickMark } from '@/components/brand/Logo'
 import { formatBusinessDate } from '@/lib/dates'
 import { formatMoney, money, type Currency } from '@/lib/money'
 import type { InvoiceItem, InvoiceRow, TransactionRow } from '@/types/db'
+import { tr } from '@/i18n'
 
 /** The printable invoice. Used on screen and by the print route. */
 export function InvoiceDocument({ invoice, items, payments, business, currency, footer, compact }: {
@@ -43,23 +44,23 @@ export function InvoiceDocument({ invoice, items, payments, business, currency, 
         </div>
         <div className={compact ? 'text-center' : 'text-right'}>
           <p className={`font-bold uppercase tracking-[0.12em] ${compact ? 'text-sm' : 'text-lg'}`}>
-            {compact ? 'Receipt · Rasiid' : 'Invoice · Qaansheeg'}
+            {compact ? tr("Receipt · Rasiid") : tr("Invoice · Qaansheeg")}
           </p>
           <p className="num font-semibold">{invoice.invoice_number}</p>
-          <p className="text-ink-500">Issued {formatBusinessDate(invoice.issue_date)}</p>
-          {invoice.due_date ? <p className="text-ink-500">Due {formatBusinessDate(invoice.due_date)}</p> : null}
+          <p className="text-ink-500">{tr("Issued")}{' '}{formatBusinessDate(invoice.issue_date)}</p>
+          {invoice.due_date ? <p className="text-ink-500">{tr("Due")}{' '}{formatBusinessDate(invoice.due_date)}</p> : null}
         </div>
       </div>
 
       <div className={`mt-6 ${compact ? 'border-t border-dashed border-ink-300 pt-3' : 'flex justify-between gap-8 border-t border-line pt-6'}`}>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Bill to</p>
-          <p className="font-semibold">{invoice.bill_to_name ?? invoice.customer_display_name ?? 'Walk-in customer'}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">{tr("Bill to")}</p>
+          <p className="font-semibold">{invoice.bill_to_name ?? invoice.customer_display_name ?? tr("Walk-in customer")}</p>
           {invoice.bill_to_phone ? <p className="num text-ink-500">{invoice.bill_to_phone}</p> : null}
         </div>
         {!compact ? (
           <div className="text-right">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Category</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">{tr("Category")}</p>
             <p className="font-semibold">{invoice.category_name ?? '—'}</p>
           </div>
         ) : null}
@@ -68,10 +69,10 @@ export function InvoiceDocument({ invoice, items, payments, business, currency, 
       <table className={`mt-5 w-full border-collapse ${compact ? 'text-[11px]' : ''}`}>
         <thead>
           <tr className="border-b border-ink-300 text-left text-xs uppercase tracking-wide text-ink-500">
-            <th className="py-2">Description</th>
-            <th className="py-2 text-right">Qty</th>
-            {!compact ? <th className="py-2 text-right">Unit price</th> : null}
-            <th className="py-2 text-right">Total</th>
+            <th className="py-2">{tr("Description")}</th>
+            <th className="py-2 text-right">{tr("Qty")}</th>
+            {!compact ? <th className="py-2 text-right">{tr("Unit price")}</th> : null}
+            <th className="py-2 text-right">{tr("Total")}</th>
           </tr>
         </thead>
         <tbody>
@@ -88,19 +89,19 @@ export function InvoiceDocument({ invoice, items, payments, business, currency, 
 
       <div className={`mt-4 ${compact ? '' : 'flex justify-end'}`}>
         <dl className={`flex flex-col gap-1.5 ${compact ? 'w-full' : 'w-72'}`}>
-          <div className="flex justify-between"><dt className="text-ink-500">Subtotal</dt><dd className="num">{formatMoney(money(invoice.subtotal, currency.decimals), currency)}</dd></div>
+          <div className="flex justify-between"><dt className="text-ink-500">{tr("Subtotal")}</dt><dd className="num">{formatMoney(money(invoice.subtotal, currency.decimals), currency)}</dd></div>
           {money(invoice.discount_amount, currency.decimals) > 0 ? (
-            <div className="flex justify-between"><dt className="text-ink-500">Discount</dt><dd className="num">−{formatMoney(money(invoice.discount_amount, currency.decimals), currency)}</dd></div>
+            <div className="flex justify-between"><dt className="text-ink-500">{tr("Discount")}</dt><dd className="num">−{formatMoney(money(invoice.discount_amount, currency.decimals), currency)}</dd></div>
           ) : null}
-          <div className="flex justify-between border-t border-ink-300 pt-1.5 text-base font-bold"><dt>Total</dt><dd className="num">{formatMoney(total, currency)}</dd></div>
-          <div className="flex justify-between"><dt className="text-ink-500">Paid</dt><dd className="num">{formatMoney(paid, currency)}</dd></div>
-          <div className="flex justify-between font-semibold"><dt>Balance due</dt><dd className="num">{formatMoney(balance, currency)}</dd></div>
+          <div className="flex justify-between border-t border-ink-300 pt-1.5 text-base font-bold"><dt>{tr("Total")}</dt><dd className="num">{formatMoney(total, currency)}</dd></div>
+          <div className="flex justify-between"><dt className="text-ink-500">{tr("Paid")}</dt><dd className="num">{formatMoney(paid, currency)}</dd></div>
+          <div className="flex justify-between font-semibold"><dt>{tr("Balance due")}</dt><dd className="num">{formatMoney(balance, currency)}</dd></div>
         </dl>
       </div>
 
       {payments.length ? (
         <div className="mt-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Payments received</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">{tr("Payments received")}</p>
           <ul className="mt-1.5 flex flex-col gap-1">
             {payments.map((payment) => (
               <li key={payment.id} className={`flex justify-between ${payment.status === 'voided' ? 'text-ink-400 line-through' : ''}`}>
@@ -119,9 +120,9 @@ export function InvoiceDocument({ invoice, items, payments, business, currency, 
 
       {invoice.notes ? <p className="mt-5 text-ink-600">{invoice.notes}</p> : null}
       <p className={`mt-6 border-t border-line pt-3 text-center text-xs text-ink-500 ${compact ? '' : 'text-left'}`}>
-        {footer ?? 'Thank you — mahadsanid!'}
+        {footer ?? tr("Thank you — mahadsanid!")}
       </p>
-      <p className="mt-1 text-center text-[10px] text-ink-400">Generated by GYMATICK</p>
+      <p className="mt-1 text-center text-[10px] text-ink-400">{tr("Generated by GYMATICK")}</p>
     </div>
   )
 }

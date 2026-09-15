@@ -250,6 +250,10 @@ export const setEmployeeStatus = (employeeId: string, status: 'active' | 'inacti
     p_employee_id: employeeId, p_status: status, p_end_date: endDate ?? null, p_reason: reason ?? null,
   })
 
+/** Brings an inactive employee back; the months they were away owe no salary. */
+export const reactivateEmployee = (employeeId: string, returnDate: string, reason?: string) =>
+  rpc<EmployeeRow>('reactivate_employee', { p_employee_id: employeeId, p_return_date: returnDate, p_reason: reason ?? null })
+
 export const getSalaryOverview = (businessId: string, periodMonth: string) =>
   rpc<SalaryOverview>('get_salary_overview', { p_business_id: businessId, p_period_month: periodMonth })
 

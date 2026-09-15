@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { GymatickLogo } from '@/components/brand/Logo'
 import { Button, Callout, Card } from '@/components/ui/primitives'
 import { Field, Input } from '@/components/ui/form'
+import { tr } from '@/i18n'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -24,26 +25,26 @@ export default function ForgotPasswordPage() {
     <div className="grid min-h-svh place-items-center bg-canvas p-6">
       <Card className="w-full max-w-[420px] p-8">
         <GymatickLogo onDark={false} />
-        <h1 className="mt-6 text-2xl font-bold text-ink-900">Reset your password</h1>
-        <p className="mt-1 text-sm text-ink-500">We will email you a link to choose a new password.</p>
+        <h1 className="mt-6 text-2xl font-bold text-ink-900">{tr("Reset your password")}</h1>
+        <p className="mt-1 text-sm text-ink-500">{tr("We will email you a link to choose a new password.")}</p>
 
         {sent ? (
           <Callout tone="success" className="mt-6" icon={<MailCheck className="size-[18px] text-income-600" />}>
-            If an account exists for that email, a reset link is on its way. The link works once and expires in an hour.
+            {tr("If an account exists for that email, a reset link is on its way. The link works once and expires in an hour.")}
           </Callout>
         ) : (
           <form className="mt-6 flex flex-col gap-4" onSubmit={submit}>
-            <Field label="Email" htmlFor="email">
+            <Field label={tr("Email")} htmlFor="email">
               <Input id="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
             </Field>
             <Button type="submit" variant="primary" size="lg" loading={pending} className="w-full">
-              Send reset link
+              {tr("Send reset link")}
             </Button>
           </form>
         )}
 
         <p className="mt-6 text-sm text-ink-500">
-          <Link to="/login" className="font-semibold text-brand-600 hover:underline">Back to sign in</Link>
+          <Link to="/login" className="font-semibold text-brand-600 hover:underline">{tr("Back to sign in")}</Link>
         </p>
       </Card>
     </div>

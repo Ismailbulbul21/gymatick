@@ -2,6 +2,7 @@ import { useId, useMemo, useState, type InputHTMLAttributes, type ReactNode, typ
 import { Check, ChevronDown, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatMoney, minorToDecimalString, parseMoneyInput, type Currency, type Minor } from '@/lib/money'
+import { tr } from '@/i18n'
 
 export function Field({ label, htmlFor, error, hint, optional, children, className }: {
   label: ReactNode
@@ -16,7 +17,7 @@ export function Field({ label, htmlFor, error, hint, optional, children, classNa
     <div className={cn('flex flex-col gap-1.5', className)}>
       <label htmlFor={htmlFor} className="text-[13px] font-semibold text-ink-900">
         {label}
-        {optional ? <span className="ml-1 font-medium text-ink-500">(optional)</span> : null}
+        {optional ? <span className="ml-1 font-medium text-ink-500">{tr("(optional)")}</span> : null}
       </label>
       {children}
       {error ? (
@@ -107,15 +108,15 @@ export const moneyError = (raw: string, currency: Currency, { allowZero = false 
   if (parsed.ok) return undefined
   switch (parsed.error) {
     case 'empty':
-      return 'Enter an amount.'
+      return tr('Enter an amount.')
     case 'not_positive':
-      return 'Enter an amount greater than 0.'
+      return tr('Enter an amount greater than 0.')
     case 'too_many_decimals':
-      return currency.decimals === 0 ? 'This currency does not use decimals.' : `Use at most ${currency.decimals} decimal places.`
+      return currency.decimals === 0 ? tr('This currency does not use decimals.') : tr('Use at most {0} decimal places.', { 0: currency.decimals })
     case 'too_large':
-      return 'That amount is too large.'
+      return tr('That amount is too large.')
     default:
-      return 'Enter a valid amount.'
+      return tr('Enter a valid amount.')
   }
 }
 
@@ -238,7 +239,7 @@ export function Combobox<T extends { id: string; label: string; hint?: string }>
       <div className={cn('flex h-10 items-center gap-2 rounded-[10px] border border-line-strong bg-surface px-3 text-sm')}>
         <span className="min-w-0 flex-1 truncate font-medium text-ink-900">{selected.label}</span>
         {selected.hint ? <span className="truncate text-xs text-ink-500">{selected.hint}</span> : null}
-        <button type="button" onClick={() => onChange(null)} aria-label="Clear selection" className="text-ink-500 hover:text-ink-900">
+        <button type="button" onClick={() => onChange(null)} aria-label={tr("Clear selection")} className="text-ink-500 hover:text-ink-900">
           <X className="size-4" />
         </button>
       </div>
@@ -252,7 +253,7 @@ export function Combobox<T extends { id: string; label: string; hint?: string }>
         <Search className="size-4 text-ink-500" aria-hidden />
         <input
           className="w-full border-0 bg-transparent p-0 text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none"
-          placeholder={placeholder ?? 'Search…'}
+          placeholder={placeholder ?? tr("Search…")}
           value={query}
           disabled={disabled}
           onChange={(event) => {
@@ -282,7 +283,7 @@ export function Combobox<T extends { id: string; label: string; hint?: string }>
             </button>
           ))}
           {filtered.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-ink-500">{emptyText ?? 'No matches'}</p>
+            <p className="px-3 py-2 text-sm text-ink-500">{emptyText ?? tr("No matches")}</p>
           ) : null}
           {onCreate && query.trim() ? (
             <button
@@ -295,7 +296,7 @@ export function Combobox<T extends { id: string; label: string; hint?: string }>
                 setOpen(false)
               }}
             >
-              {createLabel ?? 'Add'} “{query.trim()}”
+              {createLabel ?? tr("Add")} “{query.trim()}”
             </button>
           ) : null}
         </div>

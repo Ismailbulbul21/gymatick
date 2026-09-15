@@ -1,3 +1,4 @@
+import { FEATURES } from '@/lib/features'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
@@ -18,6 +19,7 @@ import { formatBusinessDate, formatBusinessTime, formatLongDate, presetRange } f
 import { formatMoney, money } from '@/lib/money'
 import { categoryColor } from '@/lib/utils'
 import type { DashboardSummary } from '@/types/db'
+import { tr } from '@/i18n'
 
 type Range = 'last_7' | 'last_30' | 'this_month'
 
@@ -73,14 +75,14 @@ export default function DashboardPage() {
   })
 
   if (summary.isError) {
-    return <ErrorState message="Could not load the dashboard" detail="GYMATICK could not reach the server." onRetry={() => void summary.refetch()} />
+    return <ErrorState message={tr("Could not load the dashboard")} detail={tr("GYMATICK could not reach the server.")} onRetry={() => void summary.refetch()} />
   }
 
   const data = summary.data
   const today = data?.today
   const closing = data?.closing_status
   const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
+  const greeting = hour < 12 ? tr('Good morning') : hour < 18 ? tr('Good afternoon') : tr('Good evening')
   const firstName = (context?.user.full_name ?? '').split(' ')[0] ?? ''
   const nothingYet = (today?.transaction_count ?? 0) === 0 && !business.go_live_date
 
@@ -94,27 +96,27 @@ export default function DashboardPage() {
             {closing ? (
               closing.is_closed ? (
                 <Badge tone={closing.is_balanced ? 'success' : 'danger'} icon={closing.is_balanced ? <CircleCheck className="size-3.5" /> : <TriangleAlert className="size-3.5" />}>
-                  Closed {formatBusinessTime(closing.closed_at, timezone)}
+                  {tr("Closed")}{' '}{formatBusinessTime(closing.closed_at, timezone)}
                   {closing.is_balanced === false && closing.difference_total !== null
                     ? ` · ${formatMoney(money(closing.difference_total, currency.decimals), currency, { sign: true })}`
-                    : ' · balanced'}
+                    : tr(" · balanced")}
                 </Badge>
               ) : (
-                <Badge tone="info"><Dot color="currentColor" /> Today is open · not closed yet</Badge>
+                <Badge tone="info"><Dot color="currentColor" />{' '}{tr("Today is open · not closed yet")}</Badge>
               )
             ) : null}
             {closing && closing.unclosed_days_with_activity > 0 ? (
               <Badge tone="warning" icon={<TriangleAlert className="size-3.5" />}>
-                {closing.unclosed_days_with_activity} earlier day{closing.unclosed_days_with_activity > 1 ? 's' : ''} not closed
+                {closing.unclosed_days_with_activity}{' '}{tr("earlier day")}{closing.unclosed_days_with_activity > 1 ? tr("s") : ''}{' '}{tr("not closed")}
               </Badge>
             ) : null}
           </span>
         }
         actions={
           <>
-            {can('income.create') ? <Button variant="primary" icon={<Plus className="size-4" />} onClick={quick.addIncome}>Add income</Button> : null}
-            {can('expenses.create') ? <Button icon={<ArrowUpRight className="size-4" />} onClick={quick.addExpense}>Add expense</Button> : null}
-            {can('closings.view') ? <Button icon={<Calculator className="size-4" />} onClick={() => navigate('/xisaab-xir')}>Xisaab Xir</Button> : null}
+            {can('income.create') ? <Button variant="primary" icon={<Plus className="size-4" />} onClick={quick.addIncome}>{tr("Add income")}</Button> : null}
+            {can('expenses.create') ? <Button icon={<ArrowUpRight className="size-4" />} onClick={quick.addExpense}>{tr("Add expense")}</Button> : null}
+            {can('closings.view') ? <Button icon={<Calculator className="size-4" />} onClick={() => navigate('/xisaab-xir')}>{tr("Xisaab Xir")}</Button> : null}
           </>
         }
       />
@@ -126,57 +128,57 @@ export default function DashboardPage() {
         ) : (
           <>
             <StatCard
-              label="Income today"
+              label={tr("Income today")}
               icon={<ArrowDownLeft className="size-5" />}
               tone="income"
               value={
                 today?.income === null || today?.income === undefined ? (
-                  <span className="text-base font-semibold text-ink-400">Not shown</span>
+                  <span className="text-base font-semibold text-ink-400">{tr("Not shown")}</span>
                 ) : (
                   <span className="text-income-700">{formatMoney(money(today.income, currency.decimals), currency, { sign: true })}</span>
                 )
               }
-              caption={today?.income !== null && today?.income !== undefined ? `${today.transaction_count} entries today` : 'Ask the owner for access'}
+              caption={today?.income !== null && today?.income !== undefined ? tr("{0} entries today", { 0: today.transaction_count }) : tr("Ask the owner for access")}
               footer={
                 data?.after_close ? (
                   <p className="text-xs text-ink-500">
-                    +{formatMoney(money(data.after_close.income, currency.decimals), currency)} recorded for{' '}
+                    +{formatMoney(money(data.after_close.income, currency.decimals), currency)}{' '}{tr("recorded for")}{' '}
                     {formatBusinessDate(data.after_close.business_date, 'd MMM')}
                   </p>
                 ) : undefined
               }
             />
             <StatCard
-              label="Expenses today"
+              label={tr("Expenses today")}
               icon={<ArrowUpRight className="size-5" />}
               tone="expense"
               value={
                 today?.expenses === null || today?.expenses === undefined ? (
-                  <span className="text-base font-semibold text-ink-400">Not shown</span>
+                  <span className="text-base font-semibold text-ink-400">{tr("Not shown")}</span>
                 ) : (
                   <span className="text-expense-600">{formatMoney(money(today.expenses, currency.decimals), currency)}</span>
                 )
               }
               caption={
                 today?.salaries !== null && today?.salaries !== undefined && today.salaries > 0
-                  ? `incl. ${formatMoney(money(today.salaries, currency.decimals), currency)} salaries`
-                  : 'Bills, supplies and salaries'
+                  ? tr("incl. {0} salaries", { 0: formatMoney(money(today.salaries, currency.decimals), currency) })
+                  : tr("Bills, supplies and salaries")
               }
             />
             <StatCard
-              label="Net today"
+              label={tr("Net today")}
               icon={<Scale className="size-5" />}
               tone="brand"
               value={
                 today?.net === null || today?.net === undefined ? (
-                  <span className="text-base font-semibold text-ink-400">Not shown</span>
+                  <span className="text-base font-semibold text-ink-400">{tr("Not shown")}</span>
                 ) : (
                   <span className={money(today.net, currency.decimals) >= 0 ? 'text-income-700' : 'text-expense-600'}>
                     {formatMoney(money(today.net, currency.decimals), currency, { sign: true })}
                   </span>
                 )
               }
-              caption="Income − expenses"
+              caption={tr("Income − expenses")}
             />
             <BalanceCard data={data} />
           </>
@@ -188,8 +190,8 @@ export default function DashboardPage() {
         <Card className="flex items-center gap-3.5 p-4">
           <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-ink-100 text-ink-600"><List className="size-5" /></span>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-semibold text-ink-600">Transactions today</p>
-            <p className="text-xs text-ink-500">Everything recorded for {formatBusinessDate(business.business_date, 'd MMM')}</p>
+            <p className="text-[13px] font-semibold text-ink-600">{tr("Transactions today")}</p>
+            <p className="text-xs text-ink-500">{tr("Everything recorded for")}{' '}{formatBusinessDate(business.business_date, 'd MMM')}</p>
           </div>
           <span className="num text-xl font-bold text-ink-900">{today?.transaction_count ?? 0}</span>
         </Card>
@@ -197,11 +199,11 @@ export default function DashboardPage() {
         <Card className="flex items-center gap-3.5 p-4">
           <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-pending-50 text-pending-600"><BadgeDollarSign className="size-5" /></span>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-semibold text-ink-600">Pending salaries</p>
+            <p className="text-[13px] font-semibold text-ink-600">{tr("Pending salaries")}</p>
             <p className="text-xs text-ink-500">
               {data?.pending_salaries
-                ? `${data.pending_salaries.unpaid_count} of ${data.pending_salaries.employee_count} employees`
-                : 'Only staff with salary access see this'}
+                ? tr("{0} of {1} employees", { 0: data.pending_salaries.unpaid_count, 1: data.pending_salaries.employee_count })
+                : tr("Only staff with salary access see this")}
             </p>
           </div>
           {data?.pending_salaries ? (
@@ -216,13 +218,13 @@ export default function DashboardPage() {
         <Card className="flex items-center gap-3.5 p-4">
           <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-brand-50 text-brand-600"><Calculator className="size-5" /></span>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-semibold text-ink-600">Today&apos;s Xisaab Xir</p>
-            <p className="text-xs text-ink-500">{closing?.is_closed ? 'Closed for today' : 'Not closed yet'}</p>
+            <p className="text-[13px] font-semibold text-ink-600">{tr("Today's Xisaab Xir")}</p>
+            <p className="text-xs text-ink-500">{closing?.is_closed ? tr("Closed for today") : tr("Not closed yet")}</p>
           </div>
           {can('closings.perform') && !closing?.is_closed ? (
-            <Button variant="primary" size="sm" onClick={() => navigate('/xisaab-xir')}>Close day</Button>
+            <Button variant="primary" size="sm" onClick={() => navigate('/xisaab-xir')}>{tr("Close day")}</Button>
           ) : can('closings.view') ? (
-            <Button size="sm" onClick={() => navigate('/xisaab-xir')}>Open</Button>
+            <Button size="sm" onClick={() => navigate('/xisaab-xir')}>{tr("Open")}</Button>
           ) : null}
         </Card>
       </div>
@@ -231,34 +233,34 @@ export default function DashboardPage() {
       <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card>
           <CardHeader
-            title="Income vs expenses"
-            description="Net result shown as a line"
+            title={tr("Income vs expenses")}
+            description={tr("Net result shown as a line")}
             action={
               <Segmented
                 value={range}
                 onChange={setRange}
                 options={[
-                  { value: 'last_7', label: '7 days' },
-                  { value: 'last_30', label: '30 days' },
-                  { value: 'this_month', label: 'This month' },
+                  { value: 'last_7', label: tr("7 days") },
+                  { value: 'last_30', label: tr("30 days") },
+                  { value: 'this_month', label: tr("This month") },
                 ]}
               />
             }
           />
           <div className="p-5 pt-4">
             {!can('income.view') || !can('expenses.view') ? (
-              <EmptyState title="Cash flow is not shown for your account" description="Ask the owner if you need to see income and expenses together." />
+              <EmptyState title={tr("Cash flow is not shown for your account")} description={tr("Ask the owner if you need to see income and expenses together.")} />
             ) : cashflow.isLoading ? (
               <Skeleton className="h-[300px]" />
             ) : cashflow.isError ? (
-              <ErrorState message="Could not load the chart" onRetry={() => void cashflow.refetch()} />
+              <ErrorState message={tr("Could not load the chart")} onRetry={() => void cashflow.refetch()} />
             ) : (cashflow.data ?? []).every((point) => point.income === 0 && point.expenses === 0) ? (
               <EmptyState
                 icon={<ChartColumn className="size-6" />}
-                title="No money recorded in this period"
-                description="Record your first income or expense and the cash flow appears here."
+                title={tr("No money recorded in this period")}
+                description={tr("Record your first income or expense and the cash flow appears here.")}
                 actions={
-                  can('income.create') ? <Button variant="primary" icon={<Plus className="size-4" />} onClick={quick.addIncome}>Add income</Button> : undefined
+                  can('income.create') ? <Button variant="primary" icon={<Plus className="size-4" />} onClick={quick.addIncome}>{tr("Add income")}</Button> : undefined
                 }
               />
             ) : (
@@ -282,11 +284,11 @@ export default function DashboardPage() {
       <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card className="overflow-hidden">
           <CardHeader
-            title="Recent transactions"
-            description="The newest money movements"
+            title={tr("Recent transactions")}
+            description={tr("The newest money movements")}
             action={
               <Link to={can('transactions.view_all') ? '/transactions' : '/income'} className="flex items-center gap-1 text-sm font-semibold text-brand-600">
-                View all <ArrowRight className="size-4" />
+                {tr("View all")}{' '}<ArrowRight className="size-4" />
               </Link>
             }
           />
@@ -296,12 +298,12 @@ export default function DashboardPage() {
             ) : (recent.data?.rows.length ?? 0) === 0 ? (
               <EmptyState
                 icon={<Wallet className="size-6" />}
-                title="No money recorded yet"
-                description="Record your first income or expense — it appears here straight away."
+                title={tr("No money recorded yet")}
+                description={tr("Record your first income or expense — it appears here straight away.")}
                 actions={
                   <>
-                    {can('income.create') ? <Button variant="primary" icon={<Plus className="size-4" />} onClick={quick.addIncome}>Add income</Button> : null}
-                    {can('expenses.create') ? <Button icon={<ArrowUpRight className="size-4" />} onClick={quick.addExpense}>Add expense</Button> : null}
+                    {can('income.create') ? <Button variant="primary" icon={<Plus className="size-4" />} onClick={quick.addIncome}>{tr("Add income")}</Button> : null}
+                    {can('expenses.create') ? <Button icon={<ArrowUpRight className="size-4" />} onClick={quick.addExpense}>{tr("Add expense")}</Button> : null}
                   </>
                 }
               />
@@ -317,7 +319,7 @@ export default function DashboardPage() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-ink-900">{row.description}</p>
                         <p className="truncate text-xs text-ink-500">
-                          {row.customer_name ?? row.vendor ?? row.employee_name ?? 'Walk-in'} ·{' '}
+                          {row.customer_name ?? row.vendor ?? row.employee_name ?? (FEATURES.customers ? tr("Walk-in") : (row.category_name ?? ''))} ·{' '}
                           {formatBusinessDate(row.business_date, 'd MMM')} {formatBusinessTime(row.occurred_at, timezone)}
                         </p>
                       </div>
@@ -349,26 +351,26 @@ export default function DashboardPage() {
       {can('invoices.view') ? (
         <Card className="overflow-hidden">
           <CardHeader
-            title="Recent invoices"
+            title={tr("Recent invoices")}
             description={
               data?.outstanding_invoices
-                ? `Unpaid: ${formatMoney(money(data.outstanding_invoices.total, currency.decimals), currency)} across ${data.outstanding_invoices.count} invoices`
+                ? tr("Unpaid: {0} across {1} invoices", { 0: formatMoney(money(data.outstanding_invoices.total, currency.decimals), currency), 1: data.outstanding_invoices.count })
                 : undefined
             }
-            action={<Link to="/invoices" className="flex items-center gap-1 text-sm font-semibold text-brand-600">All invoices <ArrowRight className="size-4" /></Link>}
+            action={<Link to="/invoices" className="flex items-center gap-1 text-sm font-semibold text-brand-600">{tr("All invoices")}{' '}<ArrowRight className="size-4" /></Link>}
           />
           <div className="mt-3">
             {invoices.isLoading ? (
               <div className="flex flex-col gap-2 p-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
             ) : (invoices.data?.rows.length ?? 0) === 0 ? (
-              <EmptyState title="No invoices yet" description="Create an invoice or receipt for a member — you can attach a payment you already recorded." />
+              <EmptyState title={tr("No invoices yet")} description={tr("Create an invoice or receipt for a member — you can attach a payment you already recorded.")} />
             ) : (
               <ul className="divide-y divide-line">
                 {invoices.data!.rows.map((invoice) => (
                   <li key={invoice.id}>
                     <Link to={`/invoices/${invoice.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-ink-50">
                       <span className="num w-36 shrink-0 text-[13px] font-semibold text-ink-700">{invoice.invoice_number}</span>
-                      <span className="min-w-0 flex-1 truncate text-sm text-ink-900">{invoice.customer_display_name ?? 'Walk-in customer'}</span>
+                      <span className="min-w-0 flex-1 truncate text-sm text-ink-900">{invoice.customer_display_name ?? tr("Walk-in customer")}</span>
                       <span className="hidden text-xs text-ink-500 sm:inline">{formatBusinessDate(invoice.issue_date, 'd MMM')}</span>
                       <StatusBadge status={invoice.status} />
                       <span className="num w-24 shrink-0 text-right text-sm font-semibold text-ink-900">
@@ -387,9 +389,9 @@ export default function DashboardPage() {
         <Card className="p-6">
           <EmptyState
             icon={<Calculator className="size-6" />}
-            title="Finish setting up GYMATICK"
-            description="Set your opening balances so the system knows how much money the gym holds right now."
-            actions={<Button variant="primary" onClick={() => navigate('/onboarding')}>Set opening balances</Button>}
+            title={tr("Finish setting up GYMATICK")}
+            description={tr("Set your opening balances so the system knows how much money the gym holds right now.")}
+            actions={<Button variant="primary" onClick={() => navigate('/onboarding')}>{tr("Set opening balances")}</Button>}
           />
         </Card>
       ) : null}
@@ -405,11 +407,11 @@ function BalanceCard({ data }: { data: DashboardSummary | undefined }) {
     return (
       <Card className="flex flex-col justify-between gap-2.5 p-5">
         <div className="flex items-center justify-between">
-          <span className="text-[13px] font-semibold text-ink-600">Current balance</span>
+          <span className="text-[13px] font-semibold text-ink-600">{tr("Current balance")}</span>
           <span className="grid size-9 place-items-center rounded-[10px] bg-ink-100 text-ink-500"><Wallet className="size-5" /></span>
         </div>
-        <p className="text-base font-semibold text-ink-400">Not shown for your account</p>
-        <p className="text-xs text-ink-500">Ask the owner if you need to see the gym balance.</p>
+        <p className="text-base font-semibold text-ink-400">{tr("Not shown for your account")}</p>
+        <p className="text-xs text-ink-500">{tr("Ask the owner if you need to see the gym balance.")}</p>
       </Card>
     )
   }
@@ -421,14 +423,14 @@ function BalanceCard({ data }: { data: DashboardSummary | undefined }) {
   return (
     <Card className="flex flex-col gap-3 border-[#0f1b44] bg-[#0f1b44] p-5 text-white shadow-lg">
       <div className="flex items-center justify-between">
-        <span className="text-[13px] font-semibold text-white/70">Current balance</span>
+        <span className="text-[13px] font-semibold text-white/70">{tr("Current balance")}</span>
         <span className="grid size-9 place-items-center rounded-[10px] bg-white/10 text-brand-300"><Wallet className="size-5" /></span>
       </div>
       <p className="text-[28px] font-bold leading-9 tracking-tight">{formatMoney(total, currency)}</p>
       <p className="-mt-1 text-xs text-white/55">
         {data.balance.checkpoint_date
-          ? `Counted ${formatBusinessDate(data.balance.checkpoint_date, 'd MMM')} + movements since`
-          : 'From your opening balances'}
+          ? tr("Counted {0} + movements since", { 0: formatBusinessDate(data.balance.checkpoint_date, 'd MMM') })
+          : tr("From your opening balances")}
       </p>
       <div className="flex h-2 gap-0.5 overflow-hidden rounded-full">
         {parts.map((method, index) => (
@@ -461,8 +463,8 @@ function LastClosingCard({ data }: { data: DashboardSummary | undefined }) {
   if (!can('closings.view')) {
     return (
       <Card className="p-5">
-        <CardHeader title="Xisaab Xir" description="Daily closing" className="p-0" />
-        <p className="mt-4 text-sm text-ink-500">Closing figures are only shown to staff with Xisaab Xir access.</p>
+        <CardHeader title={tr("Xisaab Xir")} description={tr("Daily closing")} className="p-0" />
+        <p className="mt-4 text-sm text-ink-500">{tr("Closing figures are only shown to staff with Xisaab Xir access.")}</p>
       </Card>
     )
   }
@@ -470,12 +472,12 @@ function LastClosingCard({ data }: { data: DashboardSummary | undefined }) {
   if (!last) {
     return (
       <Card>
-        <CardHeader title="Last Xisaab Xir" description="Daily closing" />
+        <CardHeader title={tr("Last Xisaab Xir")} description={tr("Daily closing")} />
         <EmptyState
           icon={<Calculator className="size-6" />}
-          title="No day closed yet"
-          description="Close your first day from Xisaab Xir when the gym stops taking money."
-          actions={<Link to="/xisaab-xir"><Button variant="primary">Go to Xisaab Xir</Button></Link>}
+          title={tr("No day closed yet")}
+          description={tr("Close your first day from Xisaab Xir when the gym stops taking money.")}
+          actions={<Link to="/xisaab-xir"><Button variant="primary">{tr("Go to Xisaab Xir")}</Button></Link>}
         />
       </Card>
     )
@@ -492,8 +494,8 @@ function LastClosingCard({ data }: { data: DashboardSummary | undefined }) {
   return (
     <Card className="flex flex-col">
       <CardHeader
-        title="Last Xisaab Xir"
-        description={`${formatBusinessDate(last.business_date, 'EEE, d MMM yyyy')} · closed ${formatBusinessTime(last.closed_at, timezone)}`}
+        title={tr("Last Xisaab Xir")}
+        description={tr("{0} · closed {1}", { 0: formatBusinessDate(last.business_date, 'EEE, d MMM yyyy'), 1: formatBusinessTime(last.closed_at, timezone) })}
         action={<StatusBadge status={last.is_balanced ? 'balanced' : 'difference'} />}
       />
       <div className="flex flex-1 flex-col gap-2.5 p-5 pt-4">
@@ -506,7 +508,7 @@ function LastClosingCard({ data }: { data: DashboardSummary | undefined }) {
         <div className={`flex items-center justify-between rounded-[10px] px-3 py-2.5 ${difference === 0 ? 'bg-income-50' : 'bg-expense-50'}`}>
           <span className={`flex items-center gap-2 text-sm font-semibold ${difference === 0 ? 'text-income-700' : 'text-expense-600'}`}>
             {difference === 0 ? <CircleCheck className="size-4" /> : <TriangleAlert className="size-4" />}
-            Difference
+            {tr("Difference")}
           </span>
           <span className={`num text-sm font-bold ${difference === 0 ? 'text-income-700' : 'text-expense-600'}`}>
             {formatMoney(difference, currency, { sign: difference !== 0 })}
@@ -518,11 +520,11 @@ function LastClosingCard({ data }: { data: DashboardSummary | undefined }) {
             <span>“{last.notes}”</span>
           </div>
         ) : (
-          <p className="text-xs text-ink-500">Closed by {last.closed_by_name ?? 'a manager'}</p>
+          <p className="text-xs text-ink-500">{tr("Closed by")}{' '}{last.closed_by_name ?? tr("a manager")}</p>
         )}
         <div className="mt-auto flex gap-2 pt-2">
-          <Link to={`/xisaab-xir/${last.id}`} className="flex-1"><Button className="w-full">View closing</Button></Link>
-          <Link to="/xisaab-xir/history"><Button variant="ghost">History</Button></Link>
+          <Link to={`/xisaab-xir/${last.id}`} className="flex-1"><Button className="w-full">{tr("View closing")}</Button></Link>
+          <Link to="/xisaab-xir/history"><Button variant="ghost">{tr("History")}</Button></Link>
         </div>
       </div>
     </Card>
@@ -540,8 +542,8 @@ function PendingSalariesCard({ overview, loading, canView }: {
   if (!canView) {
     return (
       <Card className="p-5">
-        <CardHeader title="Salaries" description="Mushahar" className="p-0" />
-        <p className="mt-4 text-sm text-ink-500">Salary information is only shown to staff with salary access.</p>
+        <CardHeader title={tr("Salaries")} description={tr("Mushahar")} className="p-0" />
+        <p className="mt-4 text-sm text-ink-500">{tr("Salary information is only shown to staff with salary access.")}</p>
       </Card>
     )
   }
@@ -550,12 +552,12 @@ function PendingSalariesCard({ overview, loading, canView }: {
 
   return (
     <Card className="flex flex-col">
-      <CardHeader title="Pending salaries" description="This month" action={rows.length ? <StatusBadge status="pending" /> : undefined} />
+      <CardHeader title={tr("Pending salaries")} description={tr("This month")} action={rows.length ? <StatusBadge status="pending" /> : undefined} />
       <div className="flex flex-1 flex-col gap-3.5 p-5 pt-4">
         {loading ? (
           Array.from({ length: 3 }).map((_, index) => <Skeleton key={index} className="h-10" />)
         ) : rows.length === 0 ? (
-          <EmptyState icon={<CircleCheck className="size-6" />} title="All salaries are paid" description="Nothing is owed to employees for this month." />
+          <EmptyState icon={<CircleCheck className="size-6" />} title={tr("All salaries are paid")} description={tr("Nothing is owed to employees for this month.")} />
         ) : (
           rows.map((employee) => {
             const paid = money(employee.paid, currency.decimals)
@@ -567,7 +569,7 @@ function PendingSalariesCard({ overview, loading, canView }: {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-ink-900">{employee.full_name}</p>
                     <p className="num truncate text-xs text-ink-500">
-                      Paid {formatMoney(paid, currency)} of {formatMoney(total, currency)}
+                      {tr("Paid")}{' '}{formatMoney(paid, currency)}{' '}{tr("of")}{' '}{formatMoney(total, currency)}
                     </p>
                   </div>
                   <span className="num text-sm font-bold text-ink-900">{formatMoney(money(employee.remaining, currency.decimals), currency)}</span>
@@ -581,11 +583,11 @@ function PendingSalariesCard({ overview, loading, canView }: {
           <>
             <div className="mt-auto h-px bg-line" />
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink-500">Total pending</span>
+              <span className="text-ink-500">{tr("Total pending")}</span>
               <span className="num font-bold text-ink-900">{formatMoney(money(overview?.totals.pending ?? 0, currency.decimals), currency)}</span>
             </div>
             <Button icon={<BadgeDollarSign className="size-4" />} onClick={() => navigate('/salaries')} className="w-full">
-              Open salaries
+              {tr("Open salaries")}
             </Button>
           </>
         ) : null}

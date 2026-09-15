@@ -1,3 +1,4 @@
+import { FEATURES } from '@/lib/features'
 import type { ComponentType } from 'react'
 
 type ScreenModule = Promise<{ default: ComponentType }>
@@ -53,7 +54,7 @@ export function preloadScreens(): () => void {
   const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
   if (connection?.saveData) return () => undefined
 
-  const queue = IN_APP.map((name) => screens[name])
+  const queue = IN_APP.filter((name) => FEATURES.customers || name !== 'customers').map((name) => screens[name])
   let cancelled = false
   const schedule = (task: () => void) => {
     if (typeof requestIdleCallback === 'function') requestIdleCallback(task, { timeout: 3000 })

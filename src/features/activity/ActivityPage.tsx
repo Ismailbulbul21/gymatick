@@ -1,3 +1,4 @@
+import { FEATURES } from '@/lib/features'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Activity } from 'lucide-react'
@@ -9,8 +10,14 @@ import { DateRangeFilter, FilterBar, FilterSelect } from '@/components/ui/filter
 import { Modal } from '@/components/ui/overlay'
 import { formatBusinessDate, formatBusinessDateTime, presetRange, type DatePreset } from '@/lib/dates'
 import type { AuditRow } from '@/types/db'
+import { tr } from '@/i18n'
 
-const MODULES = ['all', 'income', 'expenses', 'transactions', 'invoices', 'salaries', 'employees', 'closings', 'customers', 'settings', 'users', 'reports', 'auth']
+const MODULES = ['all', 'income', 'expenses', 'transactions', 'invoices', 'salaries', 'employees', 'closings', ...(FEATURES.customers ? ['customers'] : []), 'settings', 'users', 'reports', 'auth']
+const MODULE_LABELS: Record<string, string> = {
+  income: 'Income', expenses: 'Expenses', transactions: 'Transactions', invoices: 'Invoices', salaries: 'Salaries',
+  employees: 'Employees', closings: 'Xisaab Xir', customers: 'Customers', settings: 'Settings', users: 'Users',
+  reports: 'Reports', auth: 'Sign-ins',
+}
 
 export default function ActivityPage() {
   const business = useBusiness()
@@ -44,7 +51,7 @@ export default function ActivityPage() {
 
   return (
     <>
-      <PageHeader title="Activity log" subtitle="Diiwaanka Hawlaha · Who did what, and when" />
+      <PageHeader title={tr("Activity log")} subtitle={tr("Diiwaanka Hawlaha · Who did what, and when")} />
 
       <FilterBar>
         <DateRangeFilter
@@ -55,29 +62,29 @@ export default function ActivityPage() {
           onChange={(next, nextPreset) => { setRange(next); setPreset(nextPreset); setPage(0) }}
         />
         <FilterSelect
-          label="Module"
+          label={tr("Module")}
           value={module}
           onChange={(value) => { setModule(value); setPage(0) }}
-          options={MODULES.map((item) => ({ value: item, label: item === 'all' ? 'All' : item }))}
+          options={MODULES.map((item) => ({ value: item, label: item === 'all' ? tr("All") : tr(MODULE_LABELS[item] ?? item) }))}
         />
         <FilterSelect
-          label="User"
+          label={tr("User")}
           value={actorId}
           onChange={(value) => { setActorId(value); setPage(0) }}
           options={[
-            { value: '', label: 'Anyone' },
-            ...(members.data ?? []).map((member) => ({ value: member.user_id, label: member.profiles?.full_name ?? 'User' })),
+            { value: '', label: tr("Anyone") },
+            ...(members.data ?? []).map((member) => ({ value: member.user_id, label: member.profiles?.full_name ?? tr("User") })),
           ]}
         />
       </FilterBar>
 
       <Card className="overflow-hidden">
         {list.isError ? (
-          <ErrorState message="Could not load the activity log" onRetry={() => void list.refetch()} />
+          <ErrorState message={tr("Could not load the activity log")} onRetry={() => void list.refetch()} />
         ) : list.isLoading && !list.data ? (
           <div className="flex flex-col gap-2 p-4">{Array.from({ length: 8 }).map((_, index) => <Skeleton key={index} className="h-12" />)}</div>
         ) : rows.length === 0 ? (
-          <EmptyState icon={<Activity className="size-6" />} title="Nothing recorded in this period" description="Choose a wider date range to see earlier activity." />
+          <EmptyState icon={<Activity className="size-6" />} title={tr("Nothing recorded in this period")} description={tr("Choose a wider date range to see earlier activity.")} />
         ) : (
           <div className="flex flex-col">
             {Object.entries(days).map(([day, entries]) => (
@@ -109,11 +116,11 @@ export default function ActivityPage() {
         {(list.data?.count ?? 0) > 50 ? (
           <div className="flex items-center justify-between border-t border-line px-5 py-3">
             <span className="text-sm text-ink-500">
-              Showing {rows.length} of {list.data?.count} entries
+              {tr("Showing")}{' '}{rows.length}{' '}{tr("of")}{' '}{list.data?.count}{' '}{tr("entries")}
             </span>
             <div className="flex gap-2">
-              <Button size="sm" disabled={page === 0} onClick={() => setPage((current) => current - 1)}>Newer</Button>
-              <Button size="sm" disabled={(page + 1) * 50 >= (list.data?.count ?? 0)} onClick={() => setPage((current) => current + 1)}>Older</Button>
+              <Button size="sm" disabled={page === 0} onClick={() => setPage((current) => current - 1)}>{tr("Newer")}</Button>
+              <Button size="sm" disabled={(page + 1) * 50 >= (list.data?.count ?? 0)} onClick={() => setPage((current) => current + 1)}>{tr("Older")}</Button>
             </div>
           </div>
         ) : null}
@@ -122,24 +129,24 @@ export default function ActivityPage() {
       <Modal
         open={Boolean(selected)}
         onOpenChange={(open) => !open && setSelected(null)}
-        title="Activity details"
+        title={tr("Activity details")}
         description={selected ? `${selected.action} · ${formatBusinessDateTime(selected.created_at, timezone)}` : undefined}
       >
         {selected ? (
           <div className="flex flex-col gap-4 text-sm">
             <p className="text-ink-900">{selected.summary}</p>
             <dl className="grid grid-cols-[120px_minmax(0,1fr)] gap-y-2">
-              <dt className="text-ink-500">Person</dt><dd className="font-medium">{nameOf(selected.actor_id)}</dd>
-              <dt className="text-ink-500">Module</dt><dd className="capitalize">{selected.module}</dd>
-              <dt className="text-ink-500">Record</dt><dd className="num text-xs">{selected.entity_type} {selected.entity_id ?? ''}</dd>
+              <dt className="text-ink-500">{tr("Person")}</dt><dd className="font-medium">{nameOf(selected.actor_id)}</dd>
+              <dt className="text-ink-500">{tr("Module")}</dt><dd className="capitalize">{selected.module}</dd>
+              <dt className="text-ink-500">{tr("Record")}</dt><dd className="num text-xs">{selected.entity_type} {selected.entity_id ?? ''}</dd>
             </dl>
             {selected.changes ? (
               <div>
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">Changes</p>
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">{tr("Changes")}</p>
                 <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr className="text-left text-xs text-ink-500">
-                      <th className="py-1">Field</th><th className="py-1">Before</th><th className="py-1">After</th>
+                      <th className="py-1">{tr("Field")}</th><th className="py-1">{tr("Before")}</th><th className="py-1">{tr("After")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -156,7 +163,7 @@ export default function ActivityPage() {
             ) : null}
             {selected.metadata && Object.keys(selected.metadata).length ? (
               <div>
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">Extra information</p>
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">{tr("Extra information")}</p>
                 <ul className="flex flex-col gap-1 text-ink-700">
                   {Object.entries(selected.metadata).map(([field, value]) => (
                     <li key={field}>

@@ -12,7 +12,7 @@ Financial command center for the GYMATICK gym: income, expenses, invoices, salar
 | Setup | First-run onboarding: gym profile → payment methods → opening balances |
 | Money | Dashboard, Income, Expenses, Transactions ledger (edit, void, refund, transfer, owner deposit / withdrawal) |
 | Xisaab Xir | Daily closing per payment method, closing history, closing detail with later corrections, owner reopen |
-| Billing | Invoices (paid now, unpaid, or linked to a payment already recorded), print view, customers |
+| Billing | Invoices (paid now, unpaid, or linked to a payment already recorded), print view |
 | People | Employees with salary history; monthly salaries with payments, advances, adjustments and arrears |
 | Insights | Reports with CSV export, activity (audit) log |
 | Settings | Business profile, financial preferences, categories, payment methods, users & roles, my profile |
@@ -35,7 +35,7 @@ Financial command center for the GYMATICK gym: income, expenses, invoices, salar
 - Name: `gymatick` · Ref: `phzweuqzlyqhrjsxecob` · Region: `eu-central-1` (Frankfurt)
 - API URL: `https://phzweuqzlyqhrjsxecob.supabase.co`
 - Plan: Free. Upgrade to **Pro** before real financial data goes in (free projects pause after 7 days of inactivity and have no automatic backups).
-- Schema: 18 migrations in `supabase/migrations/`, all applied to this project.
+- Schema: 20 migrations in `supabase/migrations/`, all applied to this project.
 - Edge Function: `admin-users` (create users with a temporary password, reset passwords, deactivate / reactivate).
 
 The live **GYMATICK** gym starts empty and goes through setup when its owner first signs in. The earlier development gyms are kept in the database as `GYMATICK (demo archive)` and `Other Gym (demo archive)`: nothing was deleted, no active account opens them, and their three test sign-ins are blocked (`auth.users.banned_until`).
@@ -109,10 +109,21 @@ The app opens at http://localhost:5173.
 - Every table has Row Level Security. Screens read through security-invoker views, so a person only sees their own gym.
 - Every change goes through a database function that checks the person's permission first (`private.assert_permission`). The Supabase advisor warning *"Signed-In Users Can Execute SECURITY DEFINER Function"* is expected for these functions.
 - Money is never deleted: corrections are voids with a reason. Closed days are locked; only an owner can reopen them.
-- There are two roles. **Admin** (`owner`) has every permission. **Shaqaale** (`staff`) gets exactly the permissions marked `staff_allowed` in `public.permissions`: all daily recording (income, expenses, refunds, transfers, invoices and their payments, customers, salary payments, Xisaab Xir, reports) but nothing that removes or reverses records. Voiding, cancelling invoices, deactivating, reopening closed days, owner money, employees, settings and users stay with the Admin.
+- There are two roles. **Admin** (`owner`) has every permission. **Shaqaale** (`staff`) gets exactly the permissions marked `staff_allowed` in `public.permissions`: all daily recording (income, expenses, refunds, transfers, invoices and their payments, salary payments, Xisaab Xir, reports) but nothing that removes or reverses records. Voiding, cancelling invoices, deactivating, reopening closed days, owner money, employees, settings and users stay with the Admin.
 - The `admin_*` database functions can only be called by the `admin-users` Edge Function (service role), which verifies the caller's sign-in and origin.
 - The audit log is append-only.
 - Only browser-safe values go in `VITE_*` variables; the app refuses to start if a secret or service-role key is placed there. `.env*` files are git-ignored (except `.env.example`).
+
+## Deploying to Vercel
+
+1. In the Vercel project, open Settings → Environment Variables and add, for Production and Preview:
+   - `VITE_SUPABASE_URL` = `https://phzweuqzlyqhrjsxecob.supabase.co`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY` = the publishable key from `.env.local` (it is designed to be public; never add a secret or service-role key)
+2. Redeploy. Vite reads these at build time, so a deployment made before they existed keeps showing "GYMATICK could not start".
+3. In Supabase → Authentication → URL Configuration, set the Site URL to the Vercel address and add `https://<your-domain>/**` to the redirect URLs, so password-reset emails open the live site.
+4. The `admin-users` Edge Function accepts calls from `https://gymatick.vercel.app` and localhost. For another domain, set the `ALLOWED_ORIGINS` secret.
+
+`vercel.json` sends every path to `index.html`, so refreshing a page such as `/dashboard` works.
 
 ## Before real money goes in
 
@@ -124,7 +135,8 @@ The app opens at http://localhost:5173.
 ## Known limitations
 
 - One branch per gym in the interface (the schema already has branches).
-- The interface is English with Somali terms; the language preference is saved but a full Somali translation is not built yet.
+- The interface switches between English and Somali (EN / SO at the top of the screen). The Somali text is in `src/i18n/so.ts`, keyed by the English — have a native speaker review it; any text missing there shows in English. Category and payment method names are data and show as they were typed.
+- Customers are switched off for this gym (`FEATURES.customers` in `src/lib/features.ts`). The tables and database functions are kept, so the feature can be turned back on without losing anything.
 - Oxlint reports `set-state-in-effect` warnings in a few forms; behaviour is correct, but they are candidates for refactoring.
 
 ## Folder layout

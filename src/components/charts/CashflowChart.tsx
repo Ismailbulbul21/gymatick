@@ -5,6 +5,7 @@ import { useTheme } from '@/app/providers/ThemeProvider'
 import { formatBusinessDate } from '@/lib/dates'
 import { formatCompactMoney, formatMoney, type Currency, type Minor } from '@/lib/money'
 import { Button } from '@/components/ui/primitives'
+import { tr } from '@/i18n'
 
 /** Validated series colours: green income, red expenses, blue net (see spec §11.9). */
 const SERIES = {
@@ -64,7 +65,7 @@ export function CashflowChart({ data, currency, height = 300 }: { data: Cashflow
   return (
     <div className="flex flex-col gap-3">
       <Legend colors={colors} onToggle={() => setAsTable(true)} toggleLabel="View as table" />
-      <div style={{ height }} aria-label="Income versus expenses per day">
+      <div style={{ height }} aria-label={tr("Income versus expenses per day")}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barGap={2}>
             <CartesianGrid stroke={colors.grid} vertical={false} />
@@ -87,11 +88,11 @@ export function CashflowChart({ data, currency, height = 300 }: { data: Cashflow
               }}
               formatter={(value, name) => [formatMoney(Math.round(Number(value ?? 0) * factor), currency), String(name)]}
             />
-            <Bar dataKey="incomeValue" name="Income" fill={colors.income} maxBarSize={24} radius={[4, 4, 0, 0]} />
-            <Bar dataKey="expenseValue" name="Expenses" fill={colors.expense} maxBarSize={24} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="incomeValue" name={tr('Income')} fill={colors.income} maxBarSize={24} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="expenseValue" name={tr('Expenses')} fill={colors.expense} maxBarSize={24} radius={[4, 4, 0, 0]} />
             <Line
               dataKey="netValue"
-              name="Net result"
+              name={tr('Net result')}
               type="monotone"
               stroke={colors.net}
               strokeWidth={2}
@@ -114,13 +115,13 @@ function Legend({ colors, onToggle, toggleLabel }: {
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-ink-600">
         <span className="flex items-center gap-2">
-          <span className="size-2.5 rounded-[3px]" style={{ background: colors.income }} aria-hidden /> Income
+          <span className="size-2.5 rounded-[3px]" style={{ background: colors.income }} aria-hidden />{' '}{tr("Income")}
         </span>
         <span className="flex items-center gap-2">
-          <span className="size-2.5 rounded-[3px]" style={{ background: colors.expense }} aria-hidden /> Expenses
+          <span className="size-2.5 rounded-[3px]" style={{ background: colors.expense }} aria-hidden />{' '}{tr("Expenses")}
         </span>
         <span className="flex items-center gap-2">
-          <span className="h-0.5 w-4 rounded-full" style={{ background: colors.net }} aria-hidden /> Net result
+          <span className="h-0.5 w-4 rounded-full" style={{ background: colors.net }} aria-hidden />{' '}{tr("Net result")}
         </span>
       </div>
       <Button variant="ghost" size="sm" icon={<List className="size-4" />} onClick={onToggle}>

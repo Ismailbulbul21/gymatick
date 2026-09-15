@@ -1,3 +1,4 @@
+import { FEATURES } from '@/lib/features'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowDownLeft, ArrowUpRight, BadgeDollarSign, Download, Printer, ReceiptText, Scale, Calculator, List } from 'lucide-react'
@@ -13,6 +14,7 @@ import { formatBusinessDate, presetRange, type DatePreset } from '@/lib/dates'
 import { formatMoney, money } from '@/lib/money'
 import { percentChange } from '@/lib/finance'
 import { downloadCsv, toCsv } from '@/lib/utils'
+import { tr } from '@/i18n'
 
 export default function ReportsPage() {
   const business = useBusiness()
@@ -36,21 +38,21 @@ export default function ReportsPage() {
       downloadCsv(
         `gymatick-report-${range.from}_${range.to}.csv`,
         toCsv(rows as Record<string, unknown>[], [
-          { key: 'business_date', label: 'Business date' },
-          { key: 'reference', label: 'Reference' },
-          { key: 'kind', label: 'Kind' },
-          { key: 'description', label: 'Description' },
-          { key: 'category', label: 'Category' },
-          { key: 'payment_method', label: 'Payment method' },
-          { key: 'customer', label: 'Customer' },
-          { key: 'vendor', label: 'Paid to' },
-          { key: 'direction', label: 'Direction' },
-          { key: 'amount', label: 'Amount', numeric: true },
-          { key: 'recorded_by', label: 'Recorded by' },
+          { key: 'business_date', label: tr("Business date") },
+          { key: 'reference', label: tr("Reference") },
+          { key: 'kind', label: tr("Kind") },
+          { key: 'description', label: tr("Description") },
+          { key: 'category', label: tr("Category") },
+          { key: 'payment_method', label: tr("Payment method") },
+          ...(FEATURES.customers ? [{ key: 'customer', label: tr("Customer") }] : []),
+          { key: 'vendor', label: tr("Paid to") },
+          { key: 'direction', label: tr("Direction") },
+          { key: 'amount', label: tr("Amount"), numeric: true },
+          { key: 'recorded_by', label: tr("Recorded by") },
         ]),
       )
       await logExport(business.business_id, range.from, range.to, rows.length)
-      toast.success(`${rows.length} transactions exported`)
+      toast.success(tr("{0} transactions exported", { 0: rows.length }))
     } catch (error) {
       toast.error(error)
     }
@@ -59,12 +61,12 @@ export default function ReportsPage() {
   return (
     <>
       <PageHeader
-        title="Reports"
-        subtitle="Warbixinno · How the business is performing"
+        title={tr("Reports")}
+        subtitle={tr("Warbixinno · How the business is performing")}
         actions={
           <>
-            {can('reports.export') ? <Button icon={<Download className="size-4" />} onClick={exportCsv}>Export CSV</Button> : null}
-            <Button icon={<Printer className="size-4" />} onClick={() => window.print()} className="no-print">Print</Button>
+            {can('reports.export') ? <Button icon={<Download className="size-4" />} onClick={exportCsv}>{tr("Export CSV")}</Button> : null}
+            <Button icon={<Printer className="size-4" />} onClick={() => window.print()} className="no-print">{tr("Print")}</Button>
           </>
         }
       />
@@ -82,13 +84,13 @@ export default function ReportsPage() {
         />
         {data ? (
           <span className="text-xs text-ink-500">
-            compared with {formatBusinessDate(data.range.previous_from, 'd MMM')} – {formatBusinessDate(data.range.previous_to, 'd MMM')}
+            {tr("compared with")}{' '}{formatBusinessDate(data.range.previous_from, 'd MMM')} – {formatBusinessDate(data.range.previous_to, 'd MMM')}
           </span>
         ) : null}
       </FilterBar>
 
       {report.isError ? (
-        <ErrorState message="Could not load the report" onRetry={() => void report.refetch()} />
+        <ErrorState message={tr("Could not load the report")} onRetry={() => void report.refetch()} />
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -97,34 +99,34 @@ export default function ReportsPage() {
             ) : (
               <>
                 <StatCard
-                  label="Income"
+                  label={tr("Income")}
                   value={<span className="text-income-700">{formatMoney(money(totals?.income ?? 0, currency.decimals), currency)}</span>}
                   icon={<ArrowDownLeft className="size-5" />}
                   tone="income"
                   delta={<Delta value={percentChange(money(totals?.income ?? 0, currency.decimals), money(previous?.income ?? 0, currency.decimals))} />}
-                  caption="vs previous period"
+                  caption={tr("vs previous period")}
                 />
                 <StatCard
-                  label="Expenses"
+                  label={tr("Expenses")}
                   value={<span className="text-expense-600">{formatMoney(money(totals?.expenses ?? 0, currency.decimals), currency)}</span>}
                   icon={<ArrowUpRight className="size-5" />}
                   tone="expense"
                   delta={<Delta value={percentChange(money(totals?.expenses ?? 0, currency.decimals), money(previous?.expenses ?? 0, currency.decimals))} goodWhenUp={false} />}
-                  caption="vs previous period"
+                  caption={tr("vs previous period")}
                 />
                 <StatCard
-                  label="Salaries"
+                  label={tr("Salaries")}
                   value={formatMoney(money(totals?.salaries ?? 0, currency.decimals), currency)}
                   icon={<BadgeDollarSign className="size-5" />}
                   tone="pending"
                   caption={
                     totals && totals.expenses > 0
-                      ? `${Math.round((totals.salaries / totals.expenses) * 100)}% of expenses (already included)`
-                      : 'Included in expenses'
+                      ? tr("{0}% of expenses (already included)", { 0: Math.round((totals.salaries / totals.expenses) * 100) })
+                      : tr("Included in expenses")
                   }
                 />
                 <StatCard
-                  label="Net result"
+                  label={tr("Net result")}
                   value={
                     <span className={money(totals?.net ?? 0, currency.decimals) >= 0 ? 'text-income-700' : 'text-expense-600'}>
                       {formatMoney(money(totals?.net ?? 0, currency.decimals), currency, { sign: true })}
@@ -133,25 +135,25 @@ export default function ReportsPage() {
                   icon={<Scale className="size-5" />}
                   tone="brand"
                   delta={<Delta value={percentChange(money(totals?.net ?? 0, currency.decimals), money(previous?.net ?? 0, currency.decimals))} />}
-                  caption="Income − expenses"
+                  caption={tr("Income − expenses")}
                 />
-                <StatCard label="Transactions" value={<span className="num">{totals?.transaction_count ?? 0}</span>} icon={<List className="size-5" />} tone="neutral" caption="Posted entries" />
+                <StatCard label={tr("Transactions")} value={<span className="num">{totals?.transaction_count ?? 0}</span>} icon={<List className="size-5" />} tone="neutral" caption={tr("Posted entries")} />
                 <StatCard
-                  label="Average daily income"
+                  label={tr("Average daily income")}
                   value={formatMoney(money(totals?.average_daily_income ?? 0, currency.decimals), currency)}
                   icon={<ArrowDownLeft className="size-5" />}
                   tone="neutral"
-                  caption="Over the days so far"
+                  caption={tr("Over the days so far")}
                 />
                 <StatCard
-                  label="Outstanding invoices"
+                  label={tr("Outstanding invoices")}
                   value={formatMoney(money(data?.invoices.outstanding ?? 0, currency.decimals), currency)}
                   icon={<ReceiptText className="size-5" />}
                   tone="pending"
-                  caption={`${data?.invoices.outstanding_count ?? 0} invoices not fully paid`}
+                  caption={tr("{0} invoices not fully paid", { 0: data?.invoices.outstanding_count ?? 0 })}
                 />
                 <StatCard
-                  label="Closing differences"
+                  label={tr("Closing differences")}
                   value={
                     <span className={money(data?.closings?.difference_total ?? 0, currency.decimals) === 0 ? '' : 'text-expense-600'}>
                       {formatMoney(money(data?.closings?.difference_total ?? 0, currency.decimals), currency, {
@@ -161,19 +163,19 @@ export default function ReportsPage() {
                   }
                   icon={<Calculator className="size-5" />}
                   tone="neutral"
-                  caption={data?.closings ? `${data.closings.days_with_difference} of ${data.closings.days_closed} days differed` : 'No closing access'}
+                  caption={data?.closings ? tr("{0} of {1} days differed", { 0: data.closings.days_with_difference, 1: data.closings.days_closed }) : tr("No closing access")}
                 />
               </>
             )}
           </div>
 
           <Card>
-            <CardHeader title="Income vs expenses" description={`Grouped by ${data?.granularity ?? 'day'}`} />
+            <CardHeader title={tr("Income vs expenses")} description={tr("Grouped by {0}", { 0: tr(data?.granularity ?? 'day') })} />
             <div className="p-5 pt-4">
               {report.isLoading && !data ? (
                 <Skeleton className="h-[300px]" />
               ) : (data?.series ?? []).every((point) => point.income === 0 && point.expenses === 0) ? (
-                <EmptyState title="No activity in this period" description="Choose a different date range to see the numbers." />
+                <EmptyState title={tr("No activity in this period")} description={tr("Choose a different date range to see the numbers.")} />
               ) : (
                 <CashflowChart
                   currency={currency}
@@ -191,7 +193,7 @@ export default function ReportsPage() {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
-              <CardHeader title="Where the money came from" description="Income by category" />
+              <CardHeader title={tr("Where the money came from")} description={tr("Income by category")} />
               <div className="p-5 pt-4">
                 <BreakdownBars
                   tone="income"
@@ -206,7 +208,7 @@ export default function ReportsPage() {
               </div>
             </Card>
             <Card>
-              <CardHeader title="Where the money went" description="Expenses by category (salaries included)" />
+              <CardHeader title={tr("Where the money went")} description={tr("Expenses by category (salaries included)")} />
               <div className="p-5 pt-4">
                 <BreakdownBars
                   tone="expense"
@@ -223,7 +225,7 @@ export default function ReportsPage() {
           </div>
 
           <Card className="overflow-hidden">
-            <CardHeader title="Payment methods" description="Money in and out by method (transfers excluded)" />
+            <CardHeader title={tr("Payment methods")} description={tr("Money in and out by method (transfers excluded)")} />
             <div className="mt-3 overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
@@ -253,18 +255,17 @@ export default function ReportsPage() {
 
           {totals && (totals.owner_deposits > 0 || totals.owner_withdrawals > 0 || totals.transfers > 0) ? (
             <Card>
-              <CardHeader title="Other money movements" description="Not part of the net result" />
+              <CardHeader title={tr("Other money movements")} description={tr("Not part of the net result")} />
               <div className="grid gap-4 p-5 pt-4 sm:grid-cols-3">
-                <Figure label="Owner deposits" value={formatMoney(money(totals.owner_deposits, currency.decimals), currency)} />
-                <Figure label="Owner withdrawals" value={formatMoney(money(totals.owner_withdrawals, currency.decimals), currency)} />
-                <Figure label="Transfers between methods" value={formatMoney(money(totals.transfers, currency.decimals), currency)} />
+                <Figure label={tr("Owner deposits")} value={formatMoney(money(totals.owner_deposits, currency.decimals), currency)} />
+                <Figure label={tr("Owner withdrawals")} value={formatMoney(money(totals.owner_withdrawals, currency.decimals), currency)} />
+                <Figure label={tr("Transfers between methods")} value={formatMoney(money(totals.transfers, currency.decimals), currency)} />
               </div>
             </Card>
           ) : null}
 
           <p className="text-xs text-ink-500">
-            Figures use posted transactions by business date ({business.settings.timezone}). Voided entries are excluded. Salaries are
-            included in expenses.
+            {tr("Figures use posted transactions by business date (")}{business.settings.timezone}{tr("). Voided entries are excluded. Salaries are included in expenses.")}
           </p>
         </>
       )}

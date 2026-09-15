@@ -13,6 +13,7 @@ import { Field, Input } from '@/components/ui/form'
 import { toast } from '@/components/ui/toast'
 import { formatBusinessDateTime } from '@/lib/dates'
 import type { MemberRole, MemberRow, PermissionRow } from '@/types/db'
+import { tr } from '@/i18n'
 
 type Member = MemberRow & { profiles: { full_name: string; phone: string | null } | null }
 
@@ -44,7 +45,7 @@ export default function UsersPage() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['members'] })
       setDeactivating(null)
-      toast.success('Access updated')
+      toast.success(tr("Access updated"))
     },
     onError: (error) => toast.error(error),
   })
@@ -57,19 +58,19 @@ export default function UsersPage() {
     onError: (error) => toast.error(error),
   })
 
-  if (!can('users.manage')) return <Forbidden what="users and roles" />
+  if (!can('users.manage')) return <Forbidden what={tr("users and roles")} />
 
   return (
     <>
       <Card>
         <CardHeader
-          title="Users & roles"
-          description="Everyone who signs in is an Admin or a Shaqaale"
-          action={<Button size="sm" icon={<UserPlus className="size-4" />} onClick={() => setAddOpen(true)}>Add user</Button>}
+          title={tr("Users & roles")}
+          description={tr("Everyone who signs in is an Admin or a Shaqaale")}
+          action={<Button size="sm" icon={<UserPlus className="size-4" />} onClick={() => setAddOpen(true)}>{tr("Add user")}</Button>}
         />
         <div className="p-5 pt-4">
           {members.isError ? (
-            <Callout tone="danger">The list of users could not load. Check the connection and reload the page.</Callout>
+            <Callout tone="danger">{tr("The list of users could not load. Check the connection and reload the page.")}</Callout>
           ) : (
             <ul className="divide-y divide-line">
               {members.isLoading
@@ -83,24 +84,24 @@ export default function UsersPage() {
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold text-ink-900">
                             {name}
-                            {isSelf ? <span className="ml-2 text-xs font-medium text-ink-500">(you)</span> : null}
+                            {isSelf ? <span className="ml-2 text-xs font-medium text-ink-500">{tr("(you)")}</span> : null}
                           </p>
                           <p className="text-xs text-ink-500">
-                            {member.title ? `${member.title} · ` : ''}last signed in{' '}
-                            {member.last_sign_in_at ? formatBusinessDateTime(member.last_sign_in_at, timezone) : 'never'}
+                            {member.title ? `${member.title} · ` : ''}{tr("last signed in")}{' '}
+                            {member.last_sign_in_at ? formatBusinessDateTime(member.last_sign_in_at, timezone) : tr("never")}
                           </p>
                         </div>
                         <Badge
                           tone={member.role === 'owner' ? 'info' : 'neutral'}
                           icon={member.role === 'owner' ? <ShieldCheck className="size-3.5" /> : <UserRound className="size-3.5" />}
                         >
-                          {ROLE_LABEL[member.role]}
+                          {tr(ROLE_LABEL[member.role])}
                         </Badge>
                         <StatusBadge status={member.status} />
                         <div className="flex gap-2">
-                          <Button size="sm" disabled={isSelf} onClick={() => setEditing(member)}>Change role</Button>
+                          <Button size="sm" disabled={isSelf} onClick={() => setEditing(member)}>{tr("Change role")}</Button>
                           <Button size="sm" variant="ghost" disabled={isSelf} onClick={() => resetMutation.mutate(member)}>
-                            Reset password
+                            {tr("Reset password")}
                           </Button>
                           <Button
                             size="sm"
@@ -112,7 +113,7 @@ export default function UsersPage() {
                                 : statusMutation.mutate({ memberId: member.id, status: 'active' })
                             }
                           >
-                            {member.status === 'active' ? 'Deactivate' : 'Reactivate'}
+                            {member.status === 'active' ? tr("Deactivate") : tr("Reactivate")}
                           </Button>
                         </div>
                       </li>
@@ -121,8 +122,7 @@ export default function UsersPage() {
             </ul>
           )}
           <Callout tone="info" className="mt-4" icon={<ShieldCheck className="size-[18px] text-brand-600" />}>
-            The database checks the role on every action, so a change applies straight away — even if the person is already
-            signed in.
+            {tr("The database checks the role on every action, so a change applies straight away — even if the person is already signed in.")}
           </Callout>
         </div>
       </Card>
@@ -142,9 +142,9 @@ export default function UsersPage() {
       <Modal
         open={Boolean(tempPassword)}
         onOpenChange={(open) => !open && setTempPassword(null)}
-        title="Temporary password"
-        description="Share it privately. It is shown once and must be changed at first sign-in."
-        footer={<Button variant="primary" onClick={() => setTempPassword(null)}>Done</Button>}
+        title={tr("Temporary password")}
+        description={tr("Share it privately. It is shown once and must be changed at first sign-in.")}
+        footer={<Button variant="primary" onClick={() => setTempPassword(null)}>{tr("Done")}</Button>}
       >
         {tempPassword ? (
           <div className="flex flex-col gap-4">
@@ -158,13 +158,13 @@ export default function UsersPage() {
                 icon={<Copy className="size-4" />}
                 onClick={() => {
                   void navigator.clipboard.writeText(tempPassword.password)
-                  toast.success('Copied')
+                  toast.success(tr("Copied"))
                 }}
               >
-                Copy
+                {tr("Copy")}
               </Button>
             </div>
-            <Callout tone="warning">This password will not be shown again. Send it to the person privately.</Callout>
+            <Callout tone="warning">{tr("This password will not be shown again. Send it to the person privately.")}</Callout>
           </div>
         ) : null}
       </Modal>
@@ -173,14 +173,14 @@ export default function UsersPage() {
         open={Boolean(deactivating)}
         onOpenChange={(open) => !open && setDeactivating(null)}
         destructive
-        title={`Deactivate ${deactivating?.profiles?.full_name ?? 'this user'}?`}
-        confirmLabel="Deactivate"
+        title={tr("Deactivate {0}?", { 0: deactivating?.profiles?.full_name ?? 'this user' })}
+        confirmLabel={tr("Deactivate")}
         loading={statusMutation.isPending}
         onConfirm={() => deactivating && statusMutation.mutate({ memberId: deactivating.id, status: 'inactive' })}
         consequences={[
-          'They are signed out and cannot sign in again.',
-          'Everything they recorded stays in the records with their name.',
-          'You can reactivate them at any time.',
+          tr("They are signed out and cannot sign in again."),
+          tr("Everything they recorded stays in the records with their name."),
+          tr("You can reactivate them at any time."),
         ]}
       />
     </>
@@ -192,16 +192,16 @@ function RoleSummary({ role, permissions }: { role: MemberRole; permissions: Per
   if (role === 'owner') {
     return (
       <Callout tone="info" icon={<ShieldCheck className="size-[18px] text-brand-600" />}>
-        {ROLE_SUMMARY.owner}
+        {tr(ROLE_SUMMARY.owner)}
       </Callout>
     )
   }
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-ink-600">{ROLE_SUMMARY.staff}</p>
+      <p className="text-sm text-ink-600">{tr(ROLE_SUMMARY.staff)}</p>
       <div className="grid gap-3 sm:grid-cols-2">
-        <CapabilityList title="Can" allowed items={permissions.filter((permission) => permission.staff_allowed)} />
-        <CapabilityList title="Cannot" allowed={false} items={permissions.filter((permission) => !permission.staff_allowed)} />
+        <CapabilityList title={tr("Can")} allowed items={permissions.filter((permission) => permission.staff_allowed)} />
+        <CapabilityList title={tr("Cannot")} allowed={false} items={permissions.filter((permission) => !permission.staff_allowed)} />
       </div>
     </div>
   )
@@ -219,7 +219,7 @@ function CapabilityList({ title, allowed, items }: { title: string; allowed: boo
             ) : (
               <X className="mt-0.5 size-4 shrink-0 text-expense-600" aria-hidden />
             )}
-            {item.label}
+            {tr(item.label)}
           </li>
         ))}
       </ul>
@@ -236,7 +236,7 @@ function RoleModal({ member, permissions, onClose }: { member: Member | null; pe
     mutationFn: () => updateMember(member!.id, { role, title: title.trim() }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['members'] })
-      toast.success(`${name} is now ${ROLE_LABEL[role]}`)
+      toast.success(tr("{0} is now {1}", { 0: name, 1: tr(ROLE_LABEL[role]) }))
       onClose()
     },
     onError: (error) => toast.error(error),
@@ -247,21 +247,21 @@ function RoleModal({ member, permissions, onClose }: { member: Member | null; pe
       open={Boolean(member)}
       onOpenChange={(open) => !open && onClose()}
       size="lg"
-      title={`Role for ${name}`}
+      title={tr("Role for {0}", { 0: name })}
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" loading={mutation.isPending} onClick={() => mutation.mutate()}>Save role</Button>
+          <Button onClick={onClose}>{tr("Cancel")}</Button>
+          <Button variant="primary" loading={mutation.isPending} onClick={() => mutation.mutate()}>{tr("Save role")}</Button>
         </>
       }
     >
       <div className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Role">
-            <Segmented value={role} onChange={setRole} options={ROLE_OPTIONS} />
+          <Field label={tr("Role")}>
+            <Segmented value={role} onChange={setRole} options={ROLE_OPTIONS.map((option) => ({ ...option, label: tr(option.label) }))} />
           </Field>
-          <Field label="Title" optional>
-            <Input id="role-title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Front desk" />
+          <Field label={tr("Title")} optional>
+            <Input id="role-title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder={tr("e.g. Front desk")} />
           </Field>
         </div>
         <RoleSummary role={role} permissions={permissions} />
@@ -293,7 +293,7 @@ function AddUserModal({ open, permissions, onClose, onCreated }: {
       }),
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ['members'] })
-      toast.success(`${fullName.trim()} can now sign in as ${ROLE_LABEL[role]}`)
+      toast.success(tr("{0} can now sign in as {1}", { 0: fullName.trim(), 1: tr(ROLE_LABEL[role]) }))
       onCreated({ full_name: fullName.trim(), email: email.trim(), temporary_password: result.temporary_password })
       setFullName('')
       setEmail('')
@@ -308,39 +308,39 @@ function AddUserModal({ open, permissions, onClose, onCreated }: {
       open={open}
       onOpenChange={(next) => !next && onClose()}
       size="lg"
-      title="Add a user"
-      description="They sign in with a temporary password and choose their own straight away."
+      title={tr("Add a user")}
+      description={tr("They sign in with a temporary password and choose their own straight away.")}
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>{tr("Cancel")}</Button>
           <Button
             variant="primary"
             loading={mutation.isPending}
             onClick={() => {
-              if (!fullName.trim() || !email.trim()) return toast.info('Enter the name and email')
+              if (!fullName.trim() || !email.trim()) return toast.info(tr("Enter the name and email"))
               mutation.mutate()
             }}
           >
-            Create user
+            {tr("Create user")}
           </Button>
         </>
       }
     >
       <div className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Full name">
+          <Field label={tr("Full name")}>
             <Input id="new-user-name" value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus />
           </Field>
-          <Field label="Email">
+          <Field label={tr("Email")}>
             <Input id="new-user-email" type="email" autoComplete="off" value={email} onChange={(event) => setEmail(event.target.value)} />
           </Field>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Role">
-            <Segmented value={role} onChange={setRole} options={ROLE_OPTIONS} />
+          <Field label={tr("Role")}>
+            <Segmented value={role} onChange={setRole} options={ROLE_OPTIONS.map((option) => ({ ...option, label: tr(option.label) }))} />
           </Field>
-          <Field label="Title" optional>
-            <Input id="new-user-title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Front desk" />
+          <Field label={tr("Title")} optional>
+            <Input id="new-user-title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder={tr("e.g. Front desk")} />
           </Field>
         </div>
         <RoleSummary role={role} permissions={permissions} />

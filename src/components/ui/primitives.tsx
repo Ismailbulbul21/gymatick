@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { cn, avatarColor, initials as toInitials } from '@/lib/utils'
 import { formatMoney, type Currency, type Minor } from '@/lib/money'
+import { tr } from '@/i18n'
 
 /* Buttons ------------------------------------------------------------------ */
 const buttonStyles = cva(
@@ -146,7 +147,7 @@ const STATUS_MAP: Record<string, { tone: BadgeTone; icon: ReactNode; label?: str
 export function StatusBadge({ status, suffix, className }: { status: string; suffix?: string; className?: string }) {
   const key = status.toLowerCase()
   const config: { tone: BadgeTone; icon: ReactNode; label?: string } = STATUS_MAP[key] ?? { tone: 'neutral', icon: <Info className="size-3.5" /> }
-  const label = config.label ?? status.replace(/_/g, ' ')
+  const label = tr(config.label ?? status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' '))
   return (
     <Badge tone={config.tone} icon={config.icon} className={cn('capitalize', className)}>
       {label}
@@ -282,7 +283,7 @@ export function ErrorState({ message, onRetry, detail }: { message: string; onRe
       </span>
       <p className="text-sm font-semibold text-ink-900">{message}</p>
       {detail ? <p className="max-w-md text-xs text-ink-500">{detail}</p> : null}
-      {onRetry ? <Button onClick={onRetry}>Try again</Button> : null}
+      {onRetry ? <Button onClick={onRetry}>{tr("Try again")}</Button> : null}
     </div>
   )
 }

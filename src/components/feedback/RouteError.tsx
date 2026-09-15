@@ -2,6 +2,7 @@ import { isRouteErrorResponse, useNavigate, useRouteError } from 'react-router'
 import { TriangleAlert } from 'lucide-react'
 import { Button, Card, EmptyState } from '@/components/ui/primitives'
 import { errorMessage } from '@/lib/errors'
+import { tr } from '@/i18n'
 
 /** One failing screen never takes the whole app down. */
 export function RouteError() {
@@ -14,12 +15,12 @@ export function RouteError() {
       <Card className="w-full max-w-lg p-8">
         <EmptyState
           icon={<TriangleAlert className="size-6" />}
-          title={notFound ? 'Page not found' : 'Something went wrong on this page'}
-          description={notFound ? 'The page you were looking for does not exist.' : errorMessage(error)}
+          title={notFound ? tr("Page not found") : tr("Something went wrong on this page")}
+          description={notFound ? tr("The page you were looking for does not exist.") : errorMessage(error)}
           actions={
             <>
-              <Button variant="primary" onClick={() => window.location.reload()}>Reload page</Button>
-              <Button onClick={() => navigate('/dashboard')}>Go to dashboard</Button>
+              <Button variant="primary" onClick={() => window.location.reload()}>{tr("Reload page")}</Button>
+              <Button onClick={() => navigate('/dashboard')}>{tr("Go to dashboard")}</Button>
             </>
           }
         />

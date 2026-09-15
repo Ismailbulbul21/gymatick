@@ -7,6 +7,7 @@ import './index.css'
 import { queryClient } from '@/lib/query-client'
 import { router } from '@/app/router'
 import { SessionProvider } from '@/app/providers/SessionProvider'
+import { LanguageProvider } from '@/app/providers/LanguageProvider'
 import { ThemeProvider } from '@/app/providers/ThemeProvider'
 import { OfflineBanner } from '@/components/feedback/OfflineBanner'
 
@@ -15,9 +16,11 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <SessionProvider>
-          <OfflineBanner />
-          <RouterProvider router={router} />
-          <Toaster position="bottom-right" richColors closeButton toastOptions={{ duration: 5000 }} />
+          <LanguageProvider>
+            <OfflineBanner />
+            <RouterProvider router={router} />
+            <Toaster position="bottom-right" richColors closeButton toastOptions={{ duration: 5000 }} />
+          </LanguageProvider>
         </SessionProvider>
       </ThemeProvider>
     </QueryClientProvider>

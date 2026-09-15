@@ -1,3 +1,4 @@
+import { FEATURES } from '@/lib/features'
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -16,6 +17,7 @@ import { formatMoney, money } from '@/lib/money'
 import { categoryColor, downloadCsv, toCsv } from '@/lib/utils'
 import { toast } from '@/components/ui/toast'
 import type { TransactionKind, TransactionRow } from '@/types/db'
+import { tr } from '@/i18n'
 
 export type ScreenMode = 'income' | 'expense' | 'all'
 
@@ -85,10 +87,10 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
     .map((category) => ({ value: category.id, label: category.name }))
 
   const activeFilters = [
-    categoryId ? { label: `Category: ${categoryOptions.find((c) => c.value === categoryId)?.label ?? ''}`, onRemove: () => setCategoryId('') } : null,
-    methodId ? { label: `Method: ${methods.data?.find((m) => m.id === methodId)?.name ?? ''}`, onRemove: () => setMethodId('') } : null,
-    status !== 'posted' ? { label: `Status: ${status}`, onRemove: () => setStatus('posted') } : null,
-    search ? { label: `Search: ${search}`, onRemove: () => setSearch('') } : null,
+    categoryId ? { label: tr("Category: {0}", { 0: categoryOptions.find((c) => c.value === categoryId)?.label ?? '' }), onRemove: () => setCategoryId('') } : null,
+    methodId ? { label: tr("Method: {0}", { 0: methods.data?.find((m) => m.id === methodId)?.name ?? '' }), onRemove: () => setMethodId('') } : null,
+    status !== 'posted' ? { label: tr("Status: {0}", { 0: status }), onRemove: () => setStatus('posted') } : null,
+    search ? { label: tr("Search: {0}", { 0: search }), onRemove: () => setSearch('') } : null,
   ].filter(Boolean) as { label: string; onRemove: () => void }[]
 
   const kindIcon = (row: TransactionRow) => {
@@ -100,7 +102,7 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
   const columns: Column<TransactionRow>[] = [
     {
       key: 'date',
-      header: 'Date & time',
+      header: tr("Date & time"),
       priority: 1,
       mobile: 'meta',
       cell: (row) => (
@@ -110,10 +112,10 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
         </div>
       ),
     },
-    { key: 'ref', header: 'Reference', priority: 3, mobile: 'hide', cell: (row) => <span className="num text-xs font-semibold text-ink-600">{row.reference_label}</span> },
+    { key: 'ref', header: tr("Reference"), priority: 3, mobile: 'hide', cell: (row) => <span className="num text-xs font-semibold text-ink-600">{row.reference_label}</span> },
     {
       key: 'description',
-      header: 'Description',
+      header: tr("Description"),
       priority: 1,
       mobile: 'title',
       cell: (row) => (
@@ -128,7 +130,7 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
           <div className="min-w-0">
             <p className="truncate font-semibold text-ink-900">{row.description}</p>
             <p className="truncate text-xs text-ink-500">
-              {row.customer_name ?? row.vendor ?? row.employee_name ?? 'Walk-in'}
+              {row.customer_name ?? row.vendor ?? row.employee_name ?? (FEATURES.customers ? tr("Walk-in") : (row.category_name ?? ''))}
               {row.invoice_number ? ` · ${row.invoice_number}` : ''}
             </p>
           </div>
@@ -137,7 +139,7 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
     },
     {
       key: 'category',
-      header: 'Category',
+      header: tr("Category"),
       priority: 2,
       mobile: 'meta',
       cell: (row) =>
@@ -150,24 +152,24 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
           <span className="text-ink-400">—</span>
         ),
     },
-    { key: 'method', header: 'Method', priority: 2, mobile: 'meta', cell: (row) => <span className="whitespace-nowrap">{row.payment_method_name}</span> },
+    { key: 'method', header: tr("Method"), priority: 2, mobile: 'meta', cell: (row) => <span className="whitespace-nowrap">{row.payment_method_name}</span> },
     {
       key: 'by',
-      header: 'Recorded by',
+      header: tr("Recorded by"),
       priority: 3,
       mobile: 'hide',
       cell: (row) => <span className="whitespace-nowrap text-ink-600">{row.created_by_name?.split(' ')[0] ?? '—'}</span>,
     },
     {
       key: 'status',
-      header: 'Status',
+      header: tr("Status"),
       priority: 3,
       mobile: 'hide',
-      cell: (row) => (row.status === 'voided' ? <StatusBadge status="voided" /> : <span className="text-xs text-ink-500">Posted</span>),
+      cell: (row) => (row.status === 'voided' ? <StatusBadge status="voided" /> : <span className="text-xs text-ink-500">{tr("Posted")}</span>),
     },
     {
       key: 'amount',
-      header: 'Amount',
+      header: tr("Amount"),
       align: 'right',
       priority: 1,
       mobile: 'value',
@@ -193,24 +195,24 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
     try {
       const rows = await exportTransactions(business.business_id, range.from, range.to, status !== 'posted')
       const csv = toCsv(rows as Record<string, unknown>[], [
-        { key: 'business_date', label: 'Business date' },
-        { key: 'reference', label: 'Reference' },
-        { key: 'kind', label: 'Kind' },
-        { key: 'status', label: 'Status' },
-        { key: 'description', label: 'Description' },
-        { key: 'category', label: 'Category' },
-        { key: 'payment_method', label: 'Payment method' },
-        { key: 'customer', label: 'Customer' },
-        { key: 'vendor', label: 'Paid to' },
-        { key: 'invoice_number', label: 'Invoice' },
-        { key: 'direction', label: 'Direction' },
-        { key: 'amount', label: 'Amount', numeric: true },
-        { key: 'recorded_by', label: 'Recorded by' },
-        { key: 'notes', label: 'Notes' },
+        { key: 'business_date', label: tr("Business date") },
+        { key: 'reference', label: tr("Reference") },
+        { key: 'kind', label: tr("Kind") },
+        { key: 'status', label: tr("Status") },
+        { key: 'description', label: tr("Description") },
+        { key: 'category', label: tr("Category") },
+        { key: 'payment_method', label: tr("Payment method") },
+        ...(FEATURES.customers ? [{ key: 'customer', label: tr("Customer") }] : []),
+        { key: 'vendor', label: tr("Paid to") },
+        { key: 'invoice_number', label: tr("Invoice") },
+        { key: 'direction', label: tr("Direction") },
+        { key: 'amount', label: tr("Amount"), numeric: true },
+        { key: 'recorded_by', label: tr("Recorded by") },
+        { key: 'notes', label: tr("Notes") },
       ])
       downloadCsv(`gymatick-${mode}-${range.from}_${range.to}.csv`, csv)
       await logExport(business.business_id, range.from, range.to, rows.length)
-      toast.success(`${rows.length} transactions exported`)
+      toast.success(tr("{0} transactions exported", { 0: rows.length }))
     } catch (error) {
       toast.error(error)
     }
@@ -221,17 +223,17 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
   return (
     <>
       <PageHeader
-        title={config.title}
-        subtitle={config.subtitle}
+        title={tr(config.title)}
+        subtitle={tr(config.subtitle)}
         actions={
           <>
             {extraActions}
-            {can('reports.export') ? <Button icon={<Download className="size-4" />} onClick={exportCsv}>Export</Button> : null}
+            {can('reports.export') ? <Button icon={<Download className="size-4" />} onClick={exportCsv}>{tr("Export")}</Button> : null}
             {mode === 'income' && can('income.create') ? (
-              <Button variant="primary" icon={<Plus className="size-4" />} onClick={quick.addIncome}>Add income</Button>
+              <Button variant="primary" icon={<Plus className="size-4" />} onClick={quick.addIncome}>{tr("Add income")}</Button>
             ) : null}
             {mode === 'expense' && can('expenses.create') ? (
-              <Button variant="primary" icon={<Plus className="size-4" />} onClick={quick.addExpense}>Add expense</Button>
+              <Button variant="primary" icon={<Plus className="size-4" />} onClick={quick.addExpense}>{tr("Add expense")}</Button>
             ) : null}
           </>
         }
@@ -251,28 +253,28 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
           }}
         />
         <FilterSelect
-          label="Category"
+          label={tr("Category")}
           value={categoryId}
           onChange={(value) => { setCategoryId(value); setPage(0) }}
-          options={[{ value: '', label: 'All' }, ...categoryOptions]}
+          options={[{ value: '', label: tr("All") }, ...categoryOptions]}
         />
         <FilterSelect
-          label="Method"
+          label={tr("Method")}
           value={methodId}
           onChange={(value) => { setMethodId(value); setPage(0) }}
-          options={[{ value: '', label: 'All' }, ...(methods.data ?? []).map((m) => ({ value: m.id, label: m.name }))]}
+          options={[{ value: '', label: tr("All") }, ...(methods.data ?? []).map((m) => ({ value: m.id, label: m.name }))]}
         />
         <FilterSelect
-          label="Status"
+          label={tr("Status")}
           value={status}
           onChange={(value) => { setStatus(value as typeof status); setPage(0) }}
           options={[
-            { value: 'posted', label: 'Posted' },
-            { value: 'voided', label: 'Voided' },
-            { value: 'all', label: 'All' },
+            { value: 'posted', label: tr("Posted") },
+            { value: 'voided', label: tr("Voided") },
+            { value: 'all', label: tr("All") },
           ]}
         />
-        <SearchInput value={search} onChange={(value) => { setSearch(value); setPage(0) }} placeholder="Search description, TX number, customer…" />
+        <SearchInput value={search} onChange={(value) => { setSearch(value); setPage(0) }} placeholder={FEATURES.customers ? tr("Search description, TX number, customer…") : tr("Search description or TX number…")} />
       </FilterBar>
 
       <ActiveFilters
@@ -292,7 +294,7 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
         ) : (
           <>
             <StatCard
-              label={mode === 'expense' ? 'Expenses in this period' : mode === 'income' ? 'Income in this period' : 'Money in'}
+              label={mode === 'expense' ? tr("Expenses in this period") : mode === 'income' ? tr("Income in this period") : tr("Money in")}
               icon={mode === 'expense' ? <ArrowUpRight className="size-5" /> : <ArrowDownLeft className="size-5" />}
               tone={mode === 'expense' ? 'expense' : 'income'}
               value={
@@ -312,12 +314,12 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
               }
               caption={
                 mode === 'income' && (totalsData?.refunds ?? 0) > 0
-                  ? `after ${formatMoney(money(totalsData!.refunds, currency.decimals), currency)} refunds`
+                  ? tr("after {0} refunds", { 0: formatMoney(money(totalsData!.refunds, currency.decimals), currency) })
                   : `${range.from} → ${range.to}`
               }
             />
             <StatCard
-              label={mode === 'all' ? 'Money out' : 'Entries'}
+              label={mode === 'all' ? tr("Money out") : tr("Entries")}
               icon={mode === 'all' ? <ArrowUpRight className="size-5" /> : <ReceiptText className="size-5" />}
               tone={mode === 'all' ? 'expense' : 'brand'}
               value={
@@ -329,14 +331,14 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
               }
               caption={
                 mode === 'income'
-                  ? `Average ${formatMoney(money(totalsData?.average ?? 0, currency.decimals), currency)}`
+                  ? tr("Average {0}", { 0: formatMoney(money(totalsData?.average ?? 0, currency.decimals), currency) })
                   : mode === 'expense'
-                    ? 'Posted entries in this period'
-                    : 'Expenses, refunds and owner money'
+                    ? tr("Posted entries in this period")
+                    : tr("Expenses, refunds and owner money")
               }
             />
             <StatCard
-              label={mode === 'all' ? 'Net' : 'Top category'}
+              label={mode === 'all' ? tr("Net") : tr("Top category")}
               icon={<Tag className="size-5" />}
               tone="neutral"
               value={
@@ -350,14 +352,14 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
               }
               caption={
                 mode === 'all'
-                  ? 'Income − expenses'
+                  ? tr("Income − expenses")
                   : totalsData?.top_category
                     ? `${formatMoney(money(totalsData.top_category.amount, currency.decimals), currency)} · ${totalsData.top_category.share ?? 0}%`
-                    : 'No category yet'
+                    : tr("No category yet")
               }
             />
             <StatCard
-              label={mode === 'expense' ? 'Salaries included' : 'By payment method'}
+              label={mode === 'expense' ? tr("Salaries included") : tr("By payment method")}
               icon={mode === 'expense' ? <BadgeDollarSign className="size-5" /> : <Wallet className="size-5" />}
               tone={mode === 'expense' ? 'pending' : 'brand'}
               value={
@@ -369,13 +371,13 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
               }
               caption={
                 mode === 'expense'
-                  ? 'Counted once, inside expenses'
+                  ? tr("Counted once, inside expenses")
                   : totalsData?.by_method?.length
                     ? totalsData.by_method
                         .slice(0, 3)
                         .map((method) => `${method.name} ${formatMoney(money(method.amount, currency.decimals), currency)}`)
                         .join(' · ')
-                    : 'Nothing recorded yet'
+                    : tr("Nothing recorded yet")
               }
             />
           </>
@@ -384,7 +386,7 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
 
       <Card className="overflow-hidden">
         {list.isError ? (
-          <ErrorState message="Could not load transactions" onRetry={() => void list.refetch()} />
+          <ErrorState message={tr("Could not load transactions")} onRetry={() => void list.refetch()} />
         ) : (
           <>
             <DataTable
@@ -394,12 +396,12 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
               loading={list.isLoading && !list.data}
               onRowClick={(row) => setSelected(row.id)}
               rowClassName={(row) => (row.status === 'voided' ? 'opacity-60' : undefined)}
-              caption={`${config.title} for ${range.from} to ${range.to}`}
+              caption={tr("{0} for {1} to {2}", { 0: tr(config.title), 1: range.from, 2: range.to })}
               empty={
                 activeFilters.length ? (
                   <EmptyState
-                    title="Nothing matches these filters"
-                    description="Try a different date range or clear the filters."
+                    title={tr("Nothing matches these filters")}
+                    description={tr("Try a different date range or clear the filters.")}
                     actions={
                       <Button
                         onClick={() => {
@@ -409,26 +411,26 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
                           setSearch('')
                         }}
                       >
-                        Clear filters
+                        {tr("Clear filters")}
                       </Button>
                     }
                   />
                 ) : (
                   <EmptyState
                     icon={mode === 'expense' ? <ArrowUpRight className="size-6" /> : <ArrowDownLeft className="size-6" />}
-                    title={mode === 'expense' ? 'No expenses recorded yet' : mode === 'income' ? 'No income recorded yet' : 'No transactions yet'}
+                    title={mode === 'expense' ? tr("No expenses recorded yet") : mode === 'income' ? tr("No income recorded yet") : tr("No transactions yet")}
                     description={
                       mode === 'expense'
-                        ? 'Record bills, supplies and repairs as you pay them. Salaries are paid from Salaries.'
+                        ? tr("Record bills, supplies and repairs as you pay them. Salaries are paid from Salaries.")
                         : mode === 'income'
-                          ? 'Every payment the gym receives — memberships, registrations, training — goes here.'
-                          : 'Money movements appear here as soon as they are recorded.'
+                          ? tr("Every payment the gym receives — memberships, registrations, training — goes here.")
+                          : tr("Money movements appear here as soon as they are recorded.")
                     }
                     actions={
                       mode === 'expense' && can('expenses.create') ? (
-                        <Button variant="primary" icon={<Plus className="size-4" />} onClick={quick.addExpense}>Add expense</Button>
+                        <Button variant="primary" icon={<Plus className="size-4" />} onClick={quick.addExpense}>{tr("Add expense")}</Button>
                       ) : mode === 'income' && can('income.create') ? (
-                        <Button variant="primary" icon={<Plus className="size-4" />} onClick={quick.addIncome}>Add income</Button>
+                        <Button variant="primary" icon={<Plus className="size-4" />} onClick={quick.addIncome}>{tr("Add income")}</Button>
                       ) : undefined
                     }
                   />
@@ -445,7 +447,7 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
                   setPageSize(size)
                   setPage(0)
                 }}
-                label={mode === 'income' ? 'payments' : 'entries'}
+                label={mode === 'income' ? tr("payments") : tr("entries")}
               />
             ) : null}
           </>
@@ -453,7 +455,7 @@ export function TransactionsScreen({ mode, extraActions, summary }: {
       </Card>
 
       {status !== 'posted' ? (
-        <Badge tone="neutral">Voided entries are shown for history. They never count in totals.</Badge>
+        <Badge tone="neutral">{tr("Voided entries are shown for history. They never count in totals.")}</Badge>
       ) : null}
 
       <TransactionDetail transactionId={selected} onClose={() => setSelected(null)} />

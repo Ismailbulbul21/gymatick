@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router'
 import { Compass } from 'lucide-react'
 import { GymatickLogo } from '@/components/brand/Logo'
 import { Button, Card, EmptyState } from '@/components/ui/primitives'
+import { tr } from '@/i18n'
 
 export default function NotFoundPage() {
   const navigate = useNavigate()
@@ -12,13 +13,13 @@ export default function NotFoundPage() {
         <Card className="w-full p-8">
           <EmptyState
             icon={<Compass className="size-6" />}
-            title="Page not found"
-            description="This address does not exist in GYMATICK. The link may be old or mistyped."
+            title={tr("Page not found")}
+            description={tr("This address does not exist in GYMATICK. The link may be old or mistyped.")}
             actions={
               <>
-                <Button onClick={() => navigate(-1)}>Go back</Button>
+                <Button onClick={() => navigate(-1)}>{tr("Go back")}</Button>
                 <Button variant="primary" onClick={() => navigate('/dashboard')}>
-                  Open dashboard
+                  {tr("Open dashboard")}
                 </Button>
               </>
             }
